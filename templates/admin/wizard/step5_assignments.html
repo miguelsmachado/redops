@@ -1,0 +1,125 @@
+{% extends "admin/wizard/_wizard_base.html" %}
+{% set step = 5 %}
+{% block wizard_title %}Step 5 — Assignments{% endblock %}
+{% block extra_css %}
+{{ super() }}
+<style>
+  .assign-section { margin-bottom: 2rem; }
+  .assign-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 4px; overflow: hidden; }
+  .assign-table th { font-family:var(--font-mono);font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);padding:0.7rem 1rem;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border-subtle);text-align:center; }
+  .assign-table th:first-child { text-align:left; }
+  .assign-table td { padding:0.6rem 1rem;border-bottom:1px solid rgba(255,255,255,0.03);text-align:center;font-size:0.85rem; }
+  .assign-table td:first-child { text-align:left; }
+  .assign-cb { width:18px;height:18px;accent-color:var(--accent-red);cursor:pointer; }
+  .sc-select { background:var(--bg-secondary);border:1px solid var(--border-subtle);color:var(--text-primary);font-family:var(--font-mono);font-size:0.78rem;padding:0.3rem 0.5rem;border-radius:2px;width:100%; }
+</style>
+{% endblock %}
+{% block wizard_body %}
+
+<!-- Operator → Blue Team -->
+<div class="assign-section">
+  <div class="section-title">Operator → Blue <span>Team</span></div>
+  {% if operators and blue_teams %}
+  <table class="assign-table">
+    <thead>
+      <tr>
+        <th>Operator</th>
+        {% for bt in blue_teams %}<th>{{ bt.name }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for op in operators %}
+      <tr>
+        <td>
+          <div>{{ op.full_name }}</div>
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);">{{ op.username }}</div>
+        </td>
+        {% for bt in blue_teams %}
+        <td>
+          {% set is_assigned = assignments | selectattr('operator_id','equalto',op.id) | selectattr('blue_team_id','equalto',bt.id) | list | length > 0 %}
+          <input type="checkbox" class="assign-cb"
+            {% if is_assigned %}checked{% endif %}
+            onchange="toggleOpBT('{{ op.id }}','{{ bt.id }}',this.checked)">
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted);">Add operators and blue teams first.</div>
+  {% endif %}
+</div>
+
+<!-- Blue Team → Scenario -->
+<div class="assign-section">
+  <div class="section-title">Blue Team → <span>Scenario</span></div>
+  {% if blue_teams and scenarios %}
+  <table class="assign-table">
+    <thead>
+      <tr>
+        <th>Blue Team</th>
+        <th>Scenario</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for bt in blue_teams %}
+      <tr>
+        <td>{{ bt.name }}</td>
+        <td>
+          <select class="sc-select" onchange="assignScenario('{{ bt.id }}', this.value)">
+            <option value="">— Select scenario —</option>
+            {% for sc in scenarios %}
+            <option value="{{ sc.id }}" {% if bt.scenario_id == sc.id %}selected{% endif %}>{{ sc.name }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td>
+          {% if bt.scenario_id %}
+          <span class="tag tag-achieved">Assigned</span>
+          {% else %}
+          <span class="tag tag-pending">Unassigned</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted);">Add blue teams and scenarios first.</div>
+  {% endif %}
+</div>
+
+<div class="wizard-nav">
+  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">✓ Finish Setup → Dashboard</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const EID = '{{ exercise_id }}';
+
+async function toggleOpBT(opId, btId, checked) {
+  if (!checked) return; // only assign for now
+  await fetch(`/api/exercise/${EID}/setup/assign-operator`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({operator_id: opId, blue_team_id: btId}),
+  });
+}
+
+async function assignScenario(btId, scenarioId) {
+  if (!scenarioId) return;
+  const res = await fetch(`/api/exercise/${EID}/setup/assign-scenario`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({scenario_id: scenarioId, blue_team_id: btId}),
+  });
+  if (res.ok) {
+    // Update status badge
+    const row = event.target.closest('tr');
+    row.querySelector('.tag').className = 'tag tag-achieved';
+    row.querySelector('.tag').textContent = 'Assigned';
+  }
+}
+</script>
+{% endblock %}

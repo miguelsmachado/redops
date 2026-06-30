@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block title %}Configure Exercise — {{ exercise.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .step { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 4px; margin-bottom: 1.5rem; overflow: hidden; }
+  .step-header {
+    padding: 1rem 1.5rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-subtle);
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .step-num {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    background: var(--accent-red-dim); border: 1px solid var(--accent-red);
+    color: var(--accent-red); min-width: 28px; height: 28px; display: flex; align-items: center;
+    justify-content: center; border-radius: 2px;
+  }
+  .step-title { font-family: var(--font-display); font-size: 1rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+  .step-body { padding: 1.5rem; }
+  .inline-add { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1rem; }
+  .inline-add .form-group { flex: 1; min-width: 160px; margin: 0; }
+  .items-preview { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; min-height: 32px; }
+  .preview-chip {
+    font-family: var(--font-mono); font-size: 0.72rem; padding: 0.25rem 0.75rem;
+    background: var(--accent-cyan-dim); border: 1px solid rgba(0,212,255,0.3);
+    color: var(--accent-cyan); border-radius: 2px;
+  }
+  .domain-toggle { display: flex; gap: 0.5rem; }
+  .domain-btn {
+    font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 1px; text-transform: uppercase;
+    padding: 0.3rem 0.75rem; border: 1px solid var(--border-subtle); background: transparent;
+    color: var(--text-muted); cursor: pointer; border-radius: 2px; transition: all 0.2s;
+  }
+  .domain-btn.it.active { border-color: var(--accent-cyan); color: var(--accent-cyan); background: var(--accent-cyan-dim); }
+  .domain-btn.ot.active { border-color: var(--accent-orange); color: var(--accent-orange); background: rgba(255,107,53,0.1); }
+
+  /* Assignment matrix */
+  .assign-matrix { border: 1px solid var(--border-subtle); border-radius: 4px; overflow: hidden; }
+  .assign-matrix table { width: 100%; border-collapse: collapse; }
+  .assign-matrix th, .assign-matrix td {
+    padding: 0.6rem 1rem; border-bottom: 1px solid var(--border-subtle);
+    font-size: 0.82rem; text-align: center;
+  }
+  .assign-matrix th { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); background: rgba(0,0,0,0.3); }
+  .assign-matrix td:first-child { text-align: left; }
+  .assign-checkbox { width: 18px; height: 18px; accent-color: var(--accent-red); cursor: pointer; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="background: linear-gradient(135deg, rgba(255,45,85,0.08) 0%, transparent 60%); border-bottom: 1px solid var(--border-subtle); padding: 1.25rem 2rem; position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between;">
+  <div>
+    <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">// EXERCISE SETUP</div>
+    <div style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase;">{{ exercise.name }}</div>
+  </div>
+  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost">← Back</a>
+</div>
+
+<div class="container">
+
+  <!-- STEP 1: Blue Teams -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <div class="step-title">Blue Teams</div>
+    </div>
+    <div class="step-body">
+      <div class="inline-add">
+        <div class="form-group">
+          <label class="form-label">Team Name</label>
+          <input type="text" id="bt-name" class="form-control" placeholder="e.g. Blue Team Alpha">
+        </div>
+        <div class="form-group" style="flex: 0;">
+          <label class="form-label">Domains</label>
+          <div class="domain-toggle">
+            <button type="button" class="domain-btn it active" id="bt-has-it" onclick="toggleDomain(this)">IT</button>
+            <button type="button" class="domain-btn ot" id="bt-has-ot" onclick="toggleDomain(this)">OT</button>
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="addBlueTeam()">+ Add</button>
+      </div>
+      <div class="items-preview" id="bt-preview">
+        {% for bt in exercise.blue_teams %}
+        <span class="preview-chip">{{ bt.name }}{% if bt.has_it %} [IT]{% endif %}{% if bt.has_ot %} [OT]{% endif %}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Operators Assignment -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <div class="step-title">Operator → Blue Team Assignments</div>
+    </div>
+    <div class="step-body">
+      {% if exercise.blue_teams and operators %}
+      <div class="assign-matrix">
+        <table>
+          <thead>
+            <tr>
+              <th>Operator</th>
+              {% for bt in exercise.blue_teams %}
+              <th>{{ bt.name }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for op in operators %}
+            <tr>
+              <td>{{ op.full_name }}<br><span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);">{{ op.username }}</span></td>
+              {% for bt in exercise.blue_teams %}
+              <td>
+                <input type="checkbox" class="assign-checkbox"
+                  onchange="toggleAssignment('{{ exercise.id }}', '{{ op.id }}', '{{ bt.id }}', this.checked)"
+                  {% if op in exercise.operators and {'operator_id': op.id, 'blue_team_id': bt.id} in exercise.assignments|list %}checked{% endif %}>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);">Add blue teams and create operators first.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- STEP 3: Target Machines -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <div class="step-title">Target Machines</div>
+    </div>
+    <div class="step-body">
+      <div class="inline-add">
+        <div class="form-group">
+          <label class="form-label">Machine Name</label>
+          <input type="text" id="machine-name" class="form-control" placeholder="e.g. DC01, SCADA-HMI-01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description (optional)</label>
+          <input type="text" id="machine-desc" class="form-control" placeholder="Domain Controller">
+        </div>
+        <button class="btn btn-secondary" onclick="addMachine()">+ Add</button>
+      </div>
+      <div class="items-preview" id="machine-preview">
+        {% for m in exercise.machines %}
+        <span class="preview-chip">{{ m.name }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Control Lines -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <div class="step-title">Control Lines (Attack Path)</div>
+    </div>
+    <div class="step-body">
+      <div class="inline-add">
+        <div class="form-group">
+          <label class="form-label">Control Line Name</label>
+          <input type="text" id="cl-name" class="form-control" placeholder="e.g. Phishing email sent">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input type="text" id="cl-desc" class="form-control" placeholder="Optional detail">
+        </div>
+        <div class="form-group" style="flex: 0;">
+          <label class="form-label">Type</label>
+          <select id="cl-type" class="form-control" style="min-width: 80px;">
+            <option value="IT">IT</option>
+            <option value="OT">OT</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary" onclick="addControlLine()">+ Add</button>
+      </div>
+      <div id="cl-preview" style="margin-top: 0.75rem;">
+        {% for cl in exercise.control_lines %}
+        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+          <span class="tag {{ 'tag-it' if cl.domain_type.value == 'IT' else 'tag-ot' }}">{{ cl.domain_type.value }}</span>
+          <span style="font-size: 0.88rem;">{{ cl.name }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const exerciseId = '{{ exercise.id }}';
+
+function toggleDomain(btn) {
+  btn.classList.toggle('active');
+}
+
+async function addBlueTeam() {
+  const name = document.getElementById('bt-name').value.trim();
+  if (!name) return;
+  const hasIt = document.getElementById('bt-has-it').classList.contains('active');
+  const hasOt = document.getElementById('bt-has-ot').classList.contains('active');
+  const res = await fetch(`/api/exercise/${exerciseId}/setup/blue-team`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name, has_it: hasIt, has_ot: hasOt}),
+  });
+  if (res.ok) {
+    const chip = document.createElement('span');
+    chip.className = 'preview-chip';
+    chip.textContent = `${name}${hasIt?' [IT]':''}${hasOt?' [OT]':''}`;
+    document.getElementById('bt-preview').appendChild(chip);
+    document.getElementById('bt-name').value = '';
+  } else {
+    const d = await res.json();
+    alert(d.error || 'Error adding blue team');
+  }
+}
+
+async function addMachine() {
+  const name = document.getElementById('machine-name').value.trim();
+  const desc = document.getElementById('machine-desc').value.trim();
+  if (!name) return;
+  const res = await fetch(`/api/exercise/${exerciseId}/setup/machine`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name, description: desc}),
+  });
+  if (res.ok) {
+    const chip = document.createElement('span');
+    chip.className = 'preview-chip';
+    chip.textContent = name;
+    document.getElementById('machine-preview').appendChild(chip);
+    document.getElementById('machine-name').value = '';
+    document.getElementById('machine-desc').value = '';
+  } else {
+    const d = await res.json();
+    alert(d.error || 'Error adding machine');
+  }
+}
+
+async function addControlLine() {
+  const name = document.getElementById('cl-name').value.trim();
+  const desc = document.getElementById('cl-desc').value.trim();
+  const type = document.getElementById('cl-type').value;
+  if (!name) return;
+  const order = document.querySelectorAll('#cl-preview > div').length;
+  const res = await fetch(`/api/exercise/${exerciseId}/setup/control-line`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name, description: desc, domain_type: type, order}),
+  });
+  if (res.ok) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.04)';
+    row.innerHTML = `<span class="tag ${type==='IT'?'tag-it':'tag-ot'}">${type}</span><span style="font-size:0.88rem">${name}</span>`;
+    document.getElementById('cl-preview').appendChild(row);
+    document.getElementById('cl-name').value = '';
+    document.getElementById('cl-desc').value = '';
+  } else {
+    const d = await res.json();
+    alert(d.error || 'Error adding control line');
+  }
+}
+
+async function toggleAssignment(exerciseId, opId, btId, checked) {
+  if (!checked) return; // Only handle assignments for now
+  const res = await fetch(`/api/exercise/${exerciseId}/setup/assign`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({operator_id: opId, blue_team_id: btId}),
+  });
+  if (!res.ok) {
+    const d = await res.json();
+    alert(d.error || 'Assignment failed');
+  }
+}
+</script>
+{% endblock %}

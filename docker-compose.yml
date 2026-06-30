@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  redops:
+    build: .
+    ports:
+      - "7331:7331"
+    volumes:
+      - ./data:/app/data
+      - ./static/img:/app/static/img
+    environment:
+      - DATABASE_URL=sqlite:////app/data/redteam.db
+      - SECRET_KEY=CHANGE_THIS_SECRET_KEY_IN_PRODUCTION
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=admin123
+      - PORT=7331
+    restart: unless-stopped

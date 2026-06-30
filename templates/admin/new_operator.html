@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}New Operator{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 560px; padding-top: 3rem; position: relative; z-index: 1;">
+  <div class="section-title">Create <span>Operator</span></div>
+  <div class="card">
+    <div class="card-body">
+      <form method="POST">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="full_name" class="form-control" required autofocus>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Operator</button>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

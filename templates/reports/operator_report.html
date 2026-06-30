@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Red Team Report — {{ data.operator_name }}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;700&display=swap');
+    :root {
+      --accent-red: #cc0022;
+      --accent-cyan: #006688;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #fff; color: #111; font-family: 'Share Tech Mono', monospace; font-size: 11pt; line-height: 1.6; }
+
+    .cover {
+      padding: 3rem;
+      border-bottom: 4px solid var(--accent-red);
+      margin-bottom: 2rem;
+    }
+    .cover-label { font-size: 8pt; letter-spacing: 4px; text-transform: uppercase; color: #888; margin-bottom: 0.5rem; }
+    .cover-title { font-family: 'Rajdhani', sans-serif; font-size: 2rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--accent-red); }
+    .cover-meta { margin-top: 1rem; font-size: 9pt; color: #555; }
+    .cover-meta div { margin-bottom: 0.2rem; }
+
+    .section { padding: 0 3rem; margin-bottom: 2rem; }
+    .section-title {
+      font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase; color: var(--accent-red);
+      border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; margin-bottom: 1rem;
+    }
+
+    .cl-row {
+      display: flex; gap: 1rem; padding: 0.5rem 0;
+      border-bottom: 1px dotted #eee; font-size: 10pt; align-items: center;
+    }
+    .tag { font-size: 7pt; letter-spacing: 1.5px; text-transform: uppercase; padding: 1px 6px; border-radius: 2px; }
+    .tag-it { background: #e0f4ff; border: 1px solid #aadcef; color: #006688; }
+    .tag-ot { background: #fff4e0; border: 1px solid #efccaa; color: #885500; }
+
+    .action-row {
+      padding: 0.75rem 0;
+      border-bottom: 1px dotted #eee;
+      font-size: 10pt;
+    }
+    .action-head { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
+    .action-summary { font-weight: bold; }
+    .action-time { color: #888; font-size: 9pt; }
+    .action-machine { color: #555; font-size: 9pt; margin-bottom: 0.25rem; }
+    .action-detail { color: #333; border-left: 2px solid #ddd; padding-left: 0.75rem; font-size: 10pt; }
+
+    .footer {
+      border-top: 2px solid var(--accent-red);
+      padding: 1.5rem 3rem;
+      font-size: 8pt;
+      color: #888;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    @media print {
+      .no-print { display: none; }
+      body { font-size: 10pt; }
+      .cover { padding: 2rem; }
+      .section { padding: 0 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="no-print" style="background: #111; color: #eee; padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 1rem;">
+  <span style="font-size: 11pt; letter-spacing: 2px;">RED TEAM REPORT</span>
+  <button onclick="window.print()" style="margin-left: auto; background: #cc0022; color: #fff; border: none; padding: 0.4rem 1rem; cursor: pointer; font-family: monospace; font-size: 10pt; letter-spacing: 1px;">⬇ PRINT / SAVE PDF</button>
+  <a href="javascript:history.back()" style="color: #888; font-size: 10pt; text-decoration: none;">✕ Close</a>
+</div>
+
+<div class="cover">
+  <div style="margin-bottom:1rem;">
+    {% if data.logo_path %}
+    <img src="{{ data.logo_path }}" style="height:60px;object-fit:contain;">
+    {% endif %}
+  </div>
+  <div class="cover-label">Red Team Exercise Report</div>
+  <div class="cover-title">{{ data.exercise_name }}</div>
+  <div class="cover-meta">
+    <div><strong>Operator:</strong> {{ data.operator_name }}</div>
+    <div><strong>Blue Team:</strong> {{ data.blue_team_name }}</div>
+    <div><strong>Period:</strong> {{ data.start_dt[:16].replace('T',' ') }} → {{ data.end_dt[:16].replace('T',' ') }} UTC</div>
+    <div><strong>Generated:</strong> <script>document.write(new Date().toISOString().slice(0,16).replace('T',' '))</script> UTC</div>
+  </div>
+</div>
+
+<!-- Control Lines Achieved -->
+<div class="section">
+  <div class="section-title">Control Lines Achieved ({{ data.achieved_control_lines|length }})</div>
+  {% if data.achieved_control_lines %}
+    {% for cl in data.achieved_control_lines %}
+    <div class="cl-row">
+      <span class="tag {{ 'tag-it' if cl.domain_type == 'IT' else 'tag-ot' }}">{{ cl.domain_type }}</span>
+      <span style="flex: 1;">{{ cl.name }}</span>
+      <span style="color: #888; font-size: 9pt;">{{ cl.achieved_at | brt }}</span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="color: #888; font-size: 10pt;">No control lines achieved in this period.</p>
+  {% endif %}
+</div>
+
+<!-- Attack Actions -->
+<div class="section">
+  <div class="section-title">Attack Actions ({{ data.actions|length }})</div>
+  {% if data.actions %}
+    {% for action in data.actions %}
+    <div class="action-row">
+      <div class="action-head">
+        <span class="action-summary">{{ action.summary }}</span>
+        <span class="action-time">{{ action.occurred_at | brt }} BRT -3</span>
+      </div>
+      <div class="action-machine">🖥 {{ action.machine_name }}</div>
+      <div class="action-detail">{{ action.detail }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="color: #888; font-size: 10pt;">No attacks registered in this period.</p>
+  {% endif %}
+</div>
+
+<div class="footer">
+  <span>CONFIDENTIAL — RED TEAM EXERCISE DOCUMENT</span>
+  <span>{{ data.exercise_name }} / {{ data.operator_name }} / {{ data.blue_team_name }}</span>
+</div>
+
+</body>
+</html>

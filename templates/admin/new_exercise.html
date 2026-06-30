@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}New Exercise{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 560px; padding-top: 3rem; position: relative; z-index: 1;">
+  <div class="section-title">Initialize <span>Exercise</span></div>
+  <div class="card">
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label">Exercise Name</label>
+          <input type="text" name="name" class="form-control" placeholder="IRON SHIELD 2025" required autofocus>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Logo (optional)</label>
+          <input type="file" name="logo" class="form-control" accept="image/*">
+        </div>
+        <button type="submit" class="btn btn-primary">Initialize</button>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

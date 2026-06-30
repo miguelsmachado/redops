@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<style>
+  .wizard-wrap {
+    position: relative; z-index: 1;
+    max-width: 860px; margin: 0 auto; padding: 2rem;
+  }
+  .wizard-steps {
+    display: flex; gap: 0; margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 0;
+  }
+  .wizard-step {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.75rem 1.25rem; font-family: var(--font-mono);
+    font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-muted); border-bottom: 2px solid transparent;
+    text-decoration: none; transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .wizard-step:hover { color: var(--text-secondary); }
+  .wizard-step.active {
+    color: var(--accent-cyan);
+    border-bottom-color: var(--accent-cyan);
+  }
+  .wizard-step.done { color: var(--accent-green); }
+  .wizard-step-num {
+    width: 20px; height: 20px; border-radius: 2px;
+    background: var(--border-subtle); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 0.65rem; flex-shrink: 0;
+  }
+  .wizard-step.active .wizard-step-num { background: var(--accent-cyan); color: #000; }
+  .wizard-step.done .wizard-step-num { background: var(--accent-green); color: #000; }
+
+  .wizard-header {
+    background: linear-gradient(135deg, rgba(255,45,85,0.08) 0%, transparent 60%);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 1.5rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .wizard-title {
+    font-family: var(--font-display); font-size: 1.4rem;
+    font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
+  }
+  .wizard-nav {
+    display: flex; gap: 0.75rem; margin-top: 2rem; padding-top: 1.5rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wizard-header">
+  <div>
+    <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);">// EXERCISE SETUP WIZARD</div>
+    <div class="wizard-title">{% block wizard_title %}Setup{% endblock %}</div>
+  </div>
+  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost">Dashboard →</a>
+</div>
+
+<div class="wizard-wrap">
+  <div class="wizard-steps">
+    <a href="{{ url_for('admin.setup_exercise') }}" class="wizard-step {% if step == 1 %}active{% elif step > 1 %}done{% endif %}">
+      <span class="wizard-step-num">{% if step > 1 %}✓{% else %}1{% endif %}</span> Exercise
+    </a>
+    {% if exercise_id %}
+    <a href="{{ url_for('admin.setup_operators', exercise_id=exercise_id) }}" class="wizard-step {% if step == 2 %}active{% elif step > 2 %}done{% endif %}">
+      <span class="wizard-step-num">{% if step > 2 %}✓{% else %}2{% endif %}</span> Operators
+    </a>
+    <a href="{{ url_for('admin.setup_blueteams', exercise_id=exercise_id) }}" class="wizard-step {% if step == 3 %}active{% elif step > 3 %}done{% endif %}">
+      <span class="wizard-step-num">{% if step > 3 %}✓{% else %}3{% endif %}</span> Blue Teams
+    </a>
+    <a href="{{ url_for('admin.setup_scenarios', exercise_id=exercise_id) }}" class="wizard-step {% if step == 4 %}active{% elif step > 4 %}done{% endif %}">
+      <span class="wizard-step-num">{% if step > 4 %}✓{% else %}4{% endif %}</span> Scenarios
+    </a>
+    <a href="{{ url_for('admin.setup_assignments', exercise_id=exercise_id) }}" class="wizard-step {% if step == 5 %}active{% endif %}">
+      <span class="wizard-step-num">5</span> Assignments
+    </a>
+    {% endif %}
+  </div>
+
+  {% block wizard_body %}{% endblock %}
+</div>
+{% endblock %}

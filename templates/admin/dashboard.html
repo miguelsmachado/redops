@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — REDOPS{% endblock %}
+
+{% block extra_css %}
+<style>
+  .admin-header {
+    background: linear-gradient(135deg, rgba(255,45,85,0.08) 0%, transparent 60%);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 1.5rem 2rem;
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .admin-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; }
+
+  .setup-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .setup-step-header {
+    padding: 0.9rem 1.5rem;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex; align-items: center; gap: 1rem; cursor: pointer;
+  }
+  .setup-step-num {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    background: var(--accent-red-dim); border: 1px solid var(--accent-red);
+    color: var(--accent-red); width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 2px; flex-shrink: 0;
+  }
+  .setup-step-title {
+    font-family: var(--font-display); font-size: 0.9rem; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  .setup-step-body { padding: 1.5rem; }
+
+  .inline-form { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end; }
+  .inline-form .form-group { flex: 1; min-width: 180px; margin: 0; }
+
+  .tag-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+  .item-tag {
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 1px;
+    padding: 0.3rem 0.75rem; background: var(--accent-cyan-dim);
+    border: 1px solid rgba(0,212,255,0.3); color: var(--accent-cyan);
+    border-radius: 2px;
+  }
+
+  .danger-zone {
+    background: rgba(255,45,85,0.05);
+    border: 1px solid rgba(255,45,85,0.2);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+  }
+  .danger-zone-title {
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent-red); margin-bottom: 0.75rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+  <div>
+    <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">// ADMIN CONSOLE</div>
+    <div class="admin-title">Exercise Control</div>
+  </div>
+  <div class="flex-gap">
+    {% if not exercise %}
+    <a href="{{ url_for('admin.new_exercise') }}" class="btn btn-primary">+ New Exercise</a>
+    {% endif %}
+    <a href="{{ url_for('admin.setup_operators', exercise_id=exercise.id) if exercise else url_for('admin.setup_exercise') }}" class="btn btn-secondary">+ New Operator</a>
+    <a href="{{ url_for('admin.logout') }}" class="btn btn-ghost">Logout</a>
+  </div>
+</div>
+
+<div class="container">
+
+  {% if not exercise %}
+  <div class="card" style="text-align: center; padding: 3rem;">
+    <div style="font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 4px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 1rem;">No Active Exercise</div>
+    <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">Create a new exercise to begin configuration.</div>
+    <a href="{{ url_for('admin.new_exercise') }}" class="btn btn-primary">Initialize Exercise</a>
+  </div>
+  {% else %}
+
+  <!-- Exercise Info -->
+  <div class="card mb-3">
+    <div class="card-header">
+      <span class="card-title">Active Exercise</span>
+      <span class="live-dot" style="margin-left: auto;"></span>
+      <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-green);">{{ exercise.status.value }}</span>
+    </div>
+    <div class="card-body">
+      <div class="flex-between">
+        <div>
+          <div style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;">{{ exercise.name }}</div>
+          <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">ID: {{ exercise.id }}</div>
+        </div>
+        <div class="flex-gap">
+          <a href="{{ url_for('admin.setup_assignments', exercise_id=exercise.id) }}" class="btn btn-secondary">Configure</a>
+          <a href="{{ url_for('public.index') }}" class="btn btn-ghost" target="_blank">View Dashboard</a>
+          <a href="{{ url_for('admin.full_report', exercise_id=exercise.id) }}" class="btn btn-ghost" target="_blank">Report</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operators -->
+  <div class="section-title">Operators</div>
+  <table class="data-table mb-4" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 4px; overflow: hidden;">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Username</th>
+        <th>ID</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for op in operators %}
+      <tr>
+        <td>{{ op.full_name }}</td>
+        <td><span class="mono text-cyan">{{ op.username }}</span></td>
+        <td><span class="mono text-muted" style="font-size: 0.72rem;">{{ op.id[:12] }}...</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">No operators yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Danger Zone -->
+  <div class="danger-zone">
+    <div class="danger-zone-title">⚠ Exercise Control</div>
+    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+      Closing the exercise will freeze the dashboard and generate the final PDF report.
+      This action cannot be undone.
+    </p>
+    <form method="POST" action="{{ url_for('admin.close_exercise', exercise_id=exercise.id) }}"
+          onsubmit="return confirm('CLOSE EXERCISE? This will freeze all data and generate the final report.')">
+      <button type="submit" class="btn btn-danger">⛔ Close Exercise</button>
+    </form>
+  </div>
+
+  {% endif %}
+</div>
+{% endblock %}

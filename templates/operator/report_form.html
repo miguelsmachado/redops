@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Generate Report{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 600px; padding-top: 3rem; position: relative; z-index: 1;">
+  <div class="flex-between mb-3">
+    <div class="section-title" style="border: none; margin: 0;">Generate <span>Report</span></div>
+    <a href="{{ url_for('operator.dashboard') }}" class="btn btn-ghost">← Back</a>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('operator.generate_report') }}">
+        <div class="form-group">
+          <label class="form-label">Blue Team</label>
+          <select name="blue_team_id" class="form-control" required>
+            <option value="">Select Blue Team</option>
+            {% for bt in blue_teams %}
+            <option value="{{ bt.id }}">{{ bt.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Start Date/Time</label>
+            <input type="datetime-local" name="start_dt" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date/Time</label>
+            <input type="datetime-local" name="end_dt" class="form-control" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Generate PDF Report</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

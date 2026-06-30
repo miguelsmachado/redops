@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}REDOPS{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0c10;
+      --bg-secondary: #0d1117;
+      --bg-card: #111620;
+      --bg-card-hover: #161d2b;
+      --accent-red: #ff2d55;
+      --accent-red-dim: rgba(255,45,85,0.15);
+      --accent-red-glow: rgba(255,45,85,0.4);
+      --accent-cyan: #00d4ff;
+      --accent-cyan-dim: rgba(0,212,255,0.12);
+      --accent-cyan-glow: rgba(0,212,255,0.35);
+      --accent-green: #00ff88;
+      --accent-green-dim: rgba(0,255,136,0.1);
+      --accent-yellow: #ffd700;
+      --accent-orange: #ff6b35;
+      --text-primary: #e8eaf0;
+      --text-secondary: #8892a4;
+      --text-muted: #4a5568;
+      --border-subtle: rgba(255,255,255,0.06);
+      --border-accent: rgba(0,212,255,0.3);
+      --font-mono: 'Share Tech Mono', monospace;
+      --font-display: 'Rajdhani', sans-serif;
+      --font-body: 'Exo 2', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scanline overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Grid background */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Navigation ── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,12,16,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-accent);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      height: 60px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .nav-logo-img {
+      height: 32px;
+      width: 32px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 6px var(--accent-cyan));
+    }
+
+    .nav-logo-text {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px var(--accent-cyan-glow);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      margin-left: auto;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      transition: color 0.2s;
+      text-transform: uppercase;
+    }
+
+    .nav-links a:hover { color: var(--accent-cyan); }
+
+    .nav-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      background: var(--accent-red-dim);
+      border: 1px solid var(--accent-red);
+      color: var(--accent-red);
+      padding: 2px 8px;
+      border-radius: 2px;
+      letter-spacing: 2px;
+    }
+
+    /* ── Layout ── */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-red), var(--accent-cyan));
+    }
+
+    .card-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .card-body { padding: 1.5rem; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      border-radius: 2px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent-red);
+      color: #fff;
+      box-shadow: 0 0 20px var(--accent-red-glow);
+    }
+    .btn-primary:hover {
+      background: #ff4466;
+      box-shadow: 0 0 30px var(--accent-red-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent-cyan);
+      border: 1px solid var(--accent-cyan);
+    }
+    .btn-secondary:hover {
+      background: var(--accent-cyan-dim);
+      box-shadow: 0 0 15px var(--accent-cyan-glow);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+    }
+    .btn-ghost:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red);
+    }
+    .btn-danger:hover { background: var(--accent-red-dim); }
+
+    /* ── Forms ── */
+    .form-group { margin-bottom: 1.25rem; }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 0.4rem;
+    }
+
+    .form-control {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      padding: 0.6rem 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(0,212,255,0.15);
+    }
+
+    textarea.form-control { resize: vertical; min-height: 100px; }
+
+    select.form-control option { background: var(--bg-secondary); }
+
+    /* ── Progress bars ── */
+    .progress-bar-wrap {
+      background: rgba(255,255,255,0.05);
+      border-radius: 1px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 1px;
+      transition: width 0.6s ease;
+    }
+
+    .progress-bar-it { background: linear-gradient(90deg, var(--accent-cyan), #0090ff); }
+    .progress-bar-ot { background: linear-gradient(90deg, var(--accent-orange), var(--accent-yellow)); }
+    .progress-bar-overall { background: linear-gradient(90deg, var(--accent-red), #ff6b35); }
+
+    /* ── Tags / badges ── */
+    .tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 2px;
+    }
+
+    .tag-it {
+      background: var(--accent-cyan-dim);
+      border: 1px solid rgba(0,212,255,0.4);
+      color: var(--accent-cyan);
+    }
+
+    .tag-ot {
+      background: rgba(255,107,53,0.12);
+      border: 1px solid rgba(255,107,53,0.4);
+      color: var(--accent-orange);
+    }
+
+    .tag-achieved {
+      background: var(--accent-green-dim);
+      border: 1px solid rgba(0,255,136,0.4);
+      color: var(--accent-green);
+    }
+
+    .tag-pending {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    /* ── Flash messages ── */
+    .flash-messages { position: fixed; top: 70px; right: 1rem; z-index: 200; display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .flash {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 0.65rem 1rem;
+      border-radius: 2px;
+      border-left: 3px solid;
+      animation: slideIn 0.2s ease;
+    }
+
+    .flash-success { background: rgba(0,255,136,0.08); border-color: var(--accent-green); color: var(--accent-green); }
+    .flash-error { background: var(--accent-red-dim); border-color: var(--accent-red); color: var(--accent-red); }
+
+    @keyframes slideIn {
+      from { transform: translateX(20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ── Tables ── */
+    .data-table { width: 100%; border-collapse: collapse; }
+
+    .data-table th {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0.6rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .data-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 0.88rem;
+    }
+
+    .data-table tr:hover td { background: var(--bg-card-hover); }
+
+    /* ── Grid layouts ── */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+
+    @media (max-width: 1024px) {
+      .grid-4, .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Utility ── */
+    .mono { font-family: var(--font-mono); }
+    .text-cyan { color: var(--accent-cyan); }
+    .text-red { color: var(--accent-red); }
+    .text-green { color: var(--accent-green); }
+    .text-orange { color: var(--accent-orange); }
+    .text-muted { color: var(--text-muted); }
+    .text-secondary { color: var(--text-secondary); }
+    .mb-1 { margin-bottom: 0.5rem; }
+    .mb-2 { margin-bottom: 1rem; }
+    .mb-3 { margin-bottom: 1.5rem; }
+    .mb-4 { margin-bottom: 2rem; }
+    .mt-1 { margin-top: 0.5rem; }
+    .mt-2 { margin-top: 1rem; }
+    .flex { display: flex; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .flex-gap { display: flex; gap: 0.75rem; align-items: center; }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 1.5rem;
+    }
+    .section-title span { color: var(--accent-red); }
+
+    /* Glow dot */
+    .live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 2s infinite;
+      display: inline-block;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="nav">
+  <a href="{{ url_for('public.index') }}" class="nav-logo">
+    {% set _logo = logo_path or data.logo_path if data is defined else logo_path %}
+    {% set _name = exercise_name or (data.exercise_name if data is defined else None) or 'REDOPS' %}
+    {% if _logo %}
+      <img src="{{ _logo }}" class="nav-logo-img" alt="Logo" style="height:36px;width:auto;max-width:120px;object-fit:contain;filter:drop-shadow(0 0 8px var(--accent-cyan));">
+    {% endif %}
+    <span class="nav-logo-text">{{ _name }}</span>
+  </a>
+  {% block nav_links %}
+  <div class="nav-links">
+    <a href="{{ url_for('public.index') }}">Dashboard</a>
+    {% if session.get('operator_id') %}
+      <a href="{{ url_for('operator.dashboard') }}">Operator Area</a>
+      <a href="{{ url_for('operator.report') }}">Report</a>
+      <a href="{{ url_for('operator.logout') }}">Logout</a>
+    {% elif session.get('admin_id') %}
+      <a href="{{ url_for('admin.dashboard') }}">Admin</a>
+      <a href="{{ url_for('admin.logout') }}">Logout</a>
+    {% else %}
+      <a href="{{ url_for('operator.login') }}">Operator Login</a>
+      <a href="{{ url_for('admin.login') }}">Admin</a>
+    {% endif %}
+    <span class="nav-badge">RED TEAM</span>
+  </div>
+  {% endblock %}
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-messages">
+    {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+{% block extra_js %}{% endblock %}
+<script>
+  // Auto-dismiss flash messages
+  setTimeout(() => {
+    document.querySelectorAll('.flash').forEach(el => {
+      el.style.transition = 'opacity 0.4s';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 400);
+    });
+  }, 4000);
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{% extends "admin/wizard/_wizard_base.html" %}
+{% set step = 1 %}
+{% block wizard_title %}Step 1 — Exercise{% endblock %}
+{% block wizard_body %}
+<div class="card">
+  <div class="card-header"><span class="card-title">Exercise Details</span></div>
+  <div class="card-body">
+    <form method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label class="form-label">Exercise Name</label>
+        <input type="text" name="name" class="form-control" placeholder="e.g. IRON SHIELD 2025" required autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Logo (optional)</label>
+        <input type="file" name="logo" class="form-control" accept="image/*">
+        <div style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);margin-top:0.3rem;">Displayed in the dashboard header</div>
+      </div>
+      <button type="submit" class="btn btn-primary">Create Exercise → Next</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% set exercise_name = data.exercise_name %}
+{% set logo_path = data.logo_path %}
+{% block title %}{{ data.exercise_name }} — REDOPS{% endblock %}
+
+{% block extra_css %}
+<style>
+  .hero-bar{background:linear-gradient(135deg,rgba(255,45,85,.06) 0%,rgba(0,212,255,.06) 100%);border-bottom:1px solid var(--border-accent);padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;}
+  .hero-title{font-family:var(--font-display);font-size:1.6rem;font-weight:700;letter-spacing:5px;text-transform:uppercase;}
+  .hero-title .slash{color:var(--accent-red);}
+
+  /* ── Logo banner ── */
+  .logo-banner{display:flex;justify-content:center;align-items:center;padding:2rem 2rem 0;position:relative;z-index:1;}
+  .logo-banner img{max-height:90px;max-width:320px;object-fit:contain;filter:drop-shadow(0 0 20px var(--accent-cyan));}
+
+  /* ── BT overview bars ── */
+  .bt-overview{margin:2rem 2rem 0;position:relative;z-index:1;}
+  .bt-bar-row{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:4px;padding:.9rem 1.25rem;margin-bottom:.6rem;transition:border-color .2s;}
+  .bt-bar-row:hover{border-color:rgba(0,212,255,.2);}
+  .bt-bar-header{display:flex;align-items:center;gap:1rem;margin-bottom:.5rem;}
+  .bt-bar-name{font-family:var(--font-display);font-size:.95rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;flex:1;}
+  .bt-bar-pct{font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--accent-red);min-width:48px;text-align:right;}
+  .bt-bar-attacks{font-family:var(--font-mono);font-size:.68rem;color:var(--text-muted);}
+  .bt-bar-ops{font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);}
+
+  /* Combined IT+OT progress bar */
+  .combo-bar{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;display:flex;}
+  .combo-bar-it{height:100%;background:linear-gradient(90deg,#00d4ff,#0090ff);border-radius:4px 0 0 4px;transition:width .7s ease;}
+  .combo-bar-ot{height:100%;background:linear-gradient(90deg,#ff6b35,#ff2d55);transition:width .7s ease;}
+  .combo-legend{display:flex;gap:1rem;margin-top:.3rem;}
+  .combo-legend-item{font-family:var(--font-mono);font-size:.62rem;color:var(--text-muted);display:flex;align-items:center;gap:.3rem;}
+  .dot-it{width:8px;height:8px;border-radius:1px;background:#00d4ff;flex-shrink:0;}
+  .dot-ot{width:8px;height:8px;border-radius:1px;background:#ff6b35;flex-shrink:0;}
+
+  /* ── BT detail cards (below) ── */
+  .bt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:1.25rem;}
+  .bt-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:4px;overflow:hidden;transition:border-color .2s;}
+  .bt-card:hover{border-color:rgba(0,212,255,.2);}
+  .bt-card-top{padding:.9rem 1.25rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border-subtle);display:flex;align-items:flex-start;justify-content:space-between;}
+  .bt-name{font-family:var(--font-display);font-size:1rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;}
+  .bt-ops{font-family:var(--font-mono);font-size:.63rem;color:var(--text-muted);margin-top:.15rem;}
+  .bt-scenario-tag{font-family:var(--font-mono);font-size:.68rem;color:var(--accent-cyan);letter-spacing:1px;background:var(--accent-cyan-dim);border:1px solid rgba(0,212,255,.3);padding:2px 8px;border-radius:2px;}
+
+  .cl-section{padding:.5rem 1.25rem 1.25rem;}
+  .cl-item{display:flex;align-items:center;gap:.5rem;padding:.32rem 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:.82rem;}
+  .cl-check{width:14px;height:14px;border-radius:2px;border:1px solid var(--text-muted);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.6rem;}
+  .cl-check.done{background:var(--accent-green);border-color:var(--accent-green);color:#000;box-shadow:0 0 6px rgba(0,255,136,.4);}
+
+  /* ── Feed ── */
+  .feed-item{padding:.85rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.03);display:grid;grid-template-columns:1fr auto;gap:.5rem;}
+  .feed-item:hover{background:var(--bg-card-hover);}
+  .feed-summary{font-size:.88rem;margin-bottom:.2rem;}
+  .feed-meta{font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);display:flex;gap:.6rem;flex-wrap:wrap;}
+  .feed-time{font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);text-align:right;}
+  .feed-new{animation:feedIn .4s ease;border-left:2px solid var(--accent-red);}
+  @keyframes feedIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+  /* ── Leaderboard ── */
+  .lb-row{display:flex;align-items:center;gap:.75rem;padding:.55rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.03);}
+  .lb-bar-fill{height:4px;background:linear-gradient(90deg,var(--accent-red),var(--accent-orange));border-radius:1px;transition:width .5s;}
+  .lb-count{font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--accent-red);width:36px;text-align:right;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-bar">
+  <div>
+    <div class="hero-title"><span class="slash">//</span> {{ data.exercise_name }}</div>
+    <div style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);margin-top:.2rem;">EXERCISE COMMAND CENTER</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;">
+    {% if data.status == 'ACTIVE' %}
+    <div style="display:flex;align-items:center;gap:.5rem;"><span class="live-dot"></span><span style="font-family:var(--font-mono);font-size:.72rem;color:var(--accent-green);">LIVE</span></div>
+    {% else %}
+    <span style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);">CLOSED</span>
+    {% endif %}
+    <div id="clock" style="font-family:var(--font-mono);font-size:.9rem;color:var(--accent-cyan);"></div>
+  </div>
+</div>
+
+<!-- ══ LOGO ══ -->
+{% if data.logo_path %}
+<div class="logo-banner">
+  <img src="{{ data.logo_path }}" alt="{{ data.exercise_name }}">
+</div>
+{% endif %}
+
+<!-- ══ BT OVERVIEW BARS ══ -->
+{% set sorted_bts = data.blue_team_statuses | sort(attribute='scenario.overall_percent', reverse=True) if data.blue_team_statuses else [] %}
+<div class="bt-overview">
+  <div class="section-title" style="margin-bottom:1rem;">Attack <span>Progress</span></div>
+
+  {% for bt in sorted_bts %}
+  {% set sc = bt.scenario %}
+  {% set it_pct = sc.it_progress.percent if sc else 0 %}
+  {% set ot_pct = sc.ot_progress.percent if sc else 0 %}
+  {% set overall = sc.overall_percent if sc else 0 %}
+  {% set it_total = sc.it_progress.total if sc else 0 %}
+  {% set ot_total = sc.ot_progress.total if sc else 0 %}
+  {# Calculate bar widths: IT and OT segments as share of total bar #}
+  {# Bar = 100% width. IT segment = (it_achieved/total_lines)*100. OT = (ot_achieved/total_lines)*100 #}
+  {% set total_lines = (sc.it_progress.total + sc.ot_progress.total) if sc else 1 %}
+  {% set it_bar = ((sc.it_progress.achieved / total_lines) * 100) | round(1) if (sc and total_lines > 0) else 0 %}
+  {% set ot_bar = ((sc.ot_progress.achieved / total_lines) * 100) | round(1) if (sc and total_lines > 0) else 0 %}
+  {# Count attacks on this BT #}
+  {% set atk_count = bt.attack_count | default(0) %}
+
+  <div class="bt-bar-row">
+    <div class="bt-bar-header">
+      <div style="flex:1;">
+        <div class="bt-bar-name">{{ bt.blue_team_name }}</div>
+        <div class="bt-bar-ops">
+          {% for op in bt.operators %}{{ op.operator_name }}{% if not loop.last %} · {% endif %}{% endfor %}
+          {% if bt.scenario %} · <span style="color:var(--accent-cyan)">{{ bt.scenario.name }}</span>{% endif %}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.25rem;">
+        <div class="bt-bar-pct">{{ overall }}%</div>
+        <div class="bt-bar-attacks">🎯 {{ atk_count }} attacks</div>
+      </div>
+    </div>
+
+    <div class="combo-bar">
+      <div class="combo-bar-it" style="width:{{ it_bar }}%"></div>
+      <div class="combo-bar-ot" style="width:{{ ot_bar }}%"></div>
+    </div>
+
+    <div class="combo-legend">
+      {% if bt.has_it and it_total > 0 %}
+      <span class="combo-legend-item"><span class="dot-it"></span>IT {{ sc.it_progress.achieved }}/{{ it_total }}</span>
+      {% endif %}
+      {% if bt.has_ot and ot_total > 0 %}
+      <span class="combo-legend-item"><span class="dot-ot"></span>OT {{ sc.ot_progress.achieved }}/{{ ot_total }}</span>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);padding:1rem 0;">No blue teams configured yet.</div>
+  {% endfor %}
+</div>
+
+<div class="container">
+
+  <!-- ══ BT DETAIL CARDS ══ -->
+  <div class="section-title">Blue Team <span>Control Lines</span></div>
+  <div class="bt-grid mb-4">
+    {% for bt in data.blue_team_statuses %}
+    <div class="bt-card">
+      <div class="bt-card-top">
+        <div>
+          <div class="bt-name">{{ bt.blue_team_name }}</div>
+          <div class="bt-ops">{% for op in bt.operators %}{{ op.operator_name }}{% if not loop.last %}, {% endif %}{% endfor %}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end;">
+          {% if bt.scenario %}<span class="bt-scenario-tag">{{ bt.scenario.name }}</span>{% endif %}
+          {% if bt.has_it %}<span class="tag tag-it" style="margin-top:.2rem;">IT</span>{% endif %}
+          {% if bt.has_ot %}<span class="tag tag-ot">OT</span>{% endif %}
+        </div>
+      </div>
+
+      {% if bt.scenario %}
+      <div class="cl-section">
+        {% for cl in bt.scenario.control_lines %}
+        <div class="cl-item">
+          <div class="cl-check {{ 'done' if cl.achieved else '' }}">{% if cl.achieved %}✓{% endif %}</div>
+          <span class="tag {{ 'tag-it' if cl.domain_type == 'IT' else 'tag-ot' }}">{{ cl.domain_type }}</span>
+          <span style="flex:1;color:{{ 'var(--accent-green)' if cl.achieved else 'var(--text-secondary)' }};">{{ cl.name }}</span>
+          {% if cl.achieved_at %}<span style="font-family:var(--font-mono);font-size:.6rem;color:var(--text-muted);">{{ cl.achieved_at | brt }}</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="padding:1.5rem;text-align:center;font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);">No scenario assigned</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ══ FEED + LEADERBOARD ══ -->
+  <div class="grid-2 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <span class="live-dot"></span>
+        <span class="card-title">Live Attack Feed</span>
+        <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);margin-left:auto;">Last 20</span>
+      </div>
+      <div id="attack-feed">
+        {% for a in data.recent_actions %}
+        <div class="feed-item" data-id="{{ a.id }}">
+          <div>
+            <div class="feed-summary">{{ a.summary }}</div>
+            <div class="feed-meta">
+              <span>🎯 {{ a.blue_team_name }}</span>
+              <span>👤 {{ a.operator_name }}</span>
+              <span>🖥 {{ a.machine_name }}</span>
+            </div>
+          </div>
+          <div class="feed-time">{{ a.occurred_at | brt }}</div>
+        </div>
+        {% else %}
+        <div style="padding:2rem;text-align:center;font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);">No attacks yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Operator Leaderboard</span></div>
+      <div id="leaderboard">
+        {% set max_c = data.leaderboard[0].action_count if data.leaderboard else 1 %}
+        {% for i, e in data.leaderboard | enumerate(1) %}
+        <div class="lb-row">
+          <div style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);width:22px;{{ 'color:var(--accent-yellow)' if i==1 else 'color:#c0c0c0' if i==2 else 'color:#cd7f32' if i==3 else '' }}">#{{ i }}</div>
+          <div style="flex:1">
+            <div style="font-size:.88rem;">{{ e.operator_name }}</div>
+            <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);">{{ e.blue_team_name }}</div>
+          </div>
+          <div style="flex:2"><div class="lb-bar-fill" style="width:{{ (e.action_count/max_c*100)|int }}%"></div></div>
+          <div class="lb-count">{{ e.action_count }}</div>
+        </div>
+        {% else %}
+        <div style="padding:2rem;text-align:center;font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);">No activity yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Clock in BRT
+function updateClock() {
+  const now = new Date();
+  // Convert to BRT (UTC-3)
+  const brt = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('clock').textContent =
+    `${pad(brt.getUTCDate())}/${pad(brt.getUTCMonth()+1)}/${brt.getUTCFullYear()} ` +
+    `${pad(brt.getUTCHours())}:${pad(brt.getUTCMinutes())}:${pad(brt.getUTCSeconds())} (BRT -3)`;
+}
+setInterval(updateClock, 1000); updateClock();
+
+function fmtBRT(iso) {
+  try {
+    const d = new Date(iso);
+    // If stored as naive BRT, the browser interprets as UTC — just display raw
+    // Actually stored as naive, fromisoformat gives no tz info — display as-is
+    const parts = iso.split('T');
+    if (parts.length === 2) {
+      const [y,m,day] = parts[0].split('-');
+      const time = parts[1].slice(0,5);
+      return `${day}/${m}/${y} ${time} (BRT -3)`;
+    }
+    return iso.slice(0,16).replace('T',' ') + ' (BRT -3)';
+  } catch(e) { return iso.slice(0,16).replace('T',' '); }
+}
+
+let knownIds = new Set([...document.querySelectorAll('[data-id]')].map(e => e.dataset.id));
+
+async function poll() {
+  try {
+    const res = await fetch('/api/dashboard/live');
+    if (!res.ok) return;
+    const data = await res.json();
+
+    // Update feed
+    const feed = document.getElementById('attack-feed');
+    (data.recent_actions || []).forEach(a => {
+      if (!knownIds.has(a.id)) {
+        knownIds.add(a.id);
+        const div = document.createElement('div');
+        div.className = 'feed-item feed-new'; div.dataset.id = a.id;
+        div.innerHTML = `<div><div class="feed-summary">${a.summary}</div><div class="feed-meta"><span>🎯 ${a.blue_team_name}</span><span>👤 ${a.operator_name}</span><span>🖥 ${a.machine_name}</span></div></div><div class="feed-time">${fmtBRT(a.occurred_at)}</div>`;
+        feed.prepend(div);
+        while (feed.children.length > 20) feed.removeChild(feed.lastChild);
+      }
+    });
+
+    // Update leaderboard
+    const lb = document.getElementById('leaderboard');
+    const entries = data.leaderboard || [];
+    if (entries.length) {
+      const maxC = entries[0].action_count || 1;
+      lb.innerHTML = entries.map((e,i) => `
+        <div class="lb-row">
+          <div style="font-family:var(--font-mono);font-size:.72rem;width:22px;${i===0?'color:var(--accent-yellow)':i===1?'color:#c0c0c0':i===2?'color:#cd7f32':''}">#${i+1}</div>
+          <div style="flex:1"><div style="font-size:.88rem">${e.operator_name}</div><div style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted)">${e.blue_team_name}</div></div>
+          <div style="flex:2"><div class="lb-bar-fill" style="width:${Math.round(e.action_count/maxC*100)}%"></div></div>
+          <div class="lb-count">${e.action_count}</div>
+        </div>`).join('');
+    }
+  } catch(e) {}
+}
+setInterval(poll, 5000);
+</script>
+{% endblock %}

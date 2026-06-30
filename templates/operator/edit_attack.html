@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Edit Attack{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 700px; padding-top: 2rem; position: relative; z-index: 1;">
+  <div class="flex-between mb-3">
+    <div class="section-title" style="border: none; margin: 0;">Edit <span>Attack</span></div>
+    <a href="{{ url_for('operator.dashboard') }}" class="btn btn-ghost">← Back</a>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <form method="POST">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Blue Team</label>
+            <select class="form-control" disabled>
+              {% for bt in blue_teams %}
+              <option {% if bt.id == action.blue_team_id %}selected{% endif %}>{{ bt.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Machine</label>
+            <select name="machine_id" class="form-control" required>
+              {% for m in machines %}
+              <option value="{{ m.id }}" {% if m.id == action.machine_id %}selected{% endif %}>{{ m.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label">Summary</label>
+            <input type="text" name="summary" class="form-control" value="{{ action.summary }}" required>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label">Detailed Description</label>
+            <textarea name="detail" class="form-control" rows="4" required>{{ action.detail }}</textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Timestamp</label>
+            <input type="datetime-local" name="occurred_at" class="form-control" value="{{ action.occurred_at_str }}" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{{ url_for('operator.dashboard') }}" class="btn btn-ghost">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

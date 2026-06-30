@@ -1,0 +1,271 @@
+{% extends "admin/wizard/_wizard_base.html" %}
+{% set step = 4 %}
+{% block wizard_title %}Step 4 — Scenarios{% endblock %}
+{% block extra_css %}
+{{ super() }}
+<style>
+  .sc-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:4px;margin-bottom:1.25rem;overflow:hidden;}
+  .sc-header{padding:.85rem 1.25rem;background:rgba(0,0,0,.3);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:.75rem;}
+  .sc-name{font-family:var(--font-display);font-size:1rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;flex:1;}
+  .sc-body{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:1.25rem;}
+  .sub-head{font-family:var(--font-mono);font-size:.68rem;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:.5rem;}
+  .sub-add{display:flex;gap:.4rem;margin-bottom:.6rem;}
+  .sub-add input,.sub-add select{flex:1;}
+  .item-row{display:flex;align-items:center;gap:.5rem;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:.82rem;}
+  .item-row .item-name{flex:1;}
+  .btn-xs{padding:.15rem .5rem;font-size:.6rem;border-radius:2px;}
+  .edit-inline{display:none;padding:.4rem;background:rgba(0,0,0,.2);border-radius:2px;margin-top:.3rem;}
+</style>
+{% endblock %}
+
+{% block wizard_body %}
+<div style="display:flex;gap:.75rem;margin-bottom:1.5rem;align-items:flex-end;">
+  <div style="flex:1;"><label class="form-label">New Scenario Name</label><input type="text" id="sc-name" class="form-control" placeholder="e.g. Corporate Network"></div>
+  <button class="btn btn-primary" onclick="createScenario()">+ Create Scenario</button>
+</div>
+
+<div id="scenarios-list">
+{% for sc in scenarios %}
+<div class="sc-card" id="sc-{{ sc.id }}">
+  <div class="sc-header">
+    <span class="sc-name" id="sc-name-{{ sc.id }}">{{ sc.name }}</span>
+    <button class="btn btn-ghost btn-xs" onclick="toggleScEdit('{{ sc.id }}')">✏ Rename</button>
+    <form method="POST" action="{{ url_for('admin.delete_scenario', eid=exercise_id, sid=sc.id) }}" style="display:inline" onsubmit="return confirm('Delete scenario {{ sc.name }}?')">
+      <button type="submit" class="btn btn-danger btn-xs">✕ Delete</button>
+    </form>
+  </div>
+  <div id="sc-edit-{{ sc.id }}" class="edit-inline" style="padding:.75rem 1.25rem;">
+    <form method="POST" action="{{ url_for('admin.edit_scenario', eid=exercise_id, sid=sc.id) }}">
+      <div style="display:flex;gap:.5rem;">
+        <input type="text" name="name" class="form-control" value="{{ sc.name }}" style="flex:1;">
+        <button type="submit" class="btn btn-primary" style="padding:.4rem .9rem;font-size:.7rem;">Save</button>
+      </div>
+    </form>
+  </div>
+  <div class="sc-body">
+    <!-- Machines -->
+    <div>
+      <div class="sub-head">Target Machines</div>
+      <div class="sub-add">
+        <input type="text" class="form-control" id="m-name-{{ sc.id }}" placeholder="Machine name">
+        <input type="text" class="form-control" id="m-desc-{{ sc.id }}" placeholder="Desc (opt)">
+        <button class="btn btn-secondary" style="padding:.4rem .6rem;font-size:.7rem;" onclick="addMachine('{{ sc.id }}')">+</button>
+      </div>
+      <div id="m-list-{{ sc.id }}">
+        {% for m in sc.machines %}
+        <div class="item-row" id="m-row-{{ m.id }}">
+          <span style="color:var(--accent-cyan);font-size:.65rem;">🖥</span>
+          <span class="item-name" id="m-name-display-{{ m.id }}">{{ m.name }}{% if m.description %} <span style="color:var(--text-muted);font-size:.75rem;">— {{ m.description }}</span>{% endif %}</span>
+          <button class="btn btn-ghost btn-xs" onclick="toggleMEdit('{{ m.id }}')">✏</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteMachine('{{ sc.id }}','{{ m.id }}',this)">✕</button>
+        </div>
+        <div id="m-edit-{{ m.id }}" class="edit-inline">
+          <div style="display:flex;gap:.4rem;">
+            <input type="text" class="form-control" id="m-edit-name-{{ m.id }}" value="{{ m.name }}" style="flex:2;">
+            <input type="text" class="form-control" id="m-edit-desc-{{ m.id }}" value="{{ m.description }}" placeholder="Description" style="flex:2;">
+            <button class="btn btn-primary" style="padding:.3rem .7rem;font-size:.68rem;" onclick="saveMachine('{{ sc.id }}','{{ m.id }}')">✓</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Control Lines -->
+    <div>
+      <div class="sub-head">Control Lines</div>
+      <div class="sub-add">
+        <input type="text" class="form-control" id="cl-name-{{ sc.id }}" placeholder="Control line name">
+        <select class="form-control" id="cl-type-{{ sc.id }}" style="max-width:72px;">
+          <option value="IT">IT</option>
+          <option value="OT">OT</option>
+        </select>
+        <button class="btn btn-secondary" style="padding:.4rem .6rem;font-size:.7rem;" onclick="addCL('{{ sc.id }}')">+</button>
+      </div>
+      <div id="cl-list-{{ sc.id }}">
+        {% for cl in sc.control_lines %}
+        <div class="item-row" id="cl-row-{{ cl.id }}">
+          <span class="tag {{ 'tag-it' if cl.domain_type == 'IT' else 'tag-ot' }}" id="cl-tag-{{ cl.id }}">{{ cl.domain_type }}</span>
+          <span class="item-name" id="cl-name-display-{{ cl.id }}">{{ cl.name }}</span>
+          <button class="btn btn-ghost btn-xs" onclick="toggleCLEdit('{{ cl.id }}')">✏</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteCL('{{ sc.id }}','{{ cl.id }}',this)">✕</button>
+        </div>
+        <div id="cl-edit-{{ cl.id }}" class="edit-inline">
+          <div style="display:flex;gap:.4rem;align-items:center;">
+            <input type="text" class="form-control" id="cl-edit-name-{{ cl.id }}" value="{{ cl.name }}" style="flex:2;">
+            <select class="form-control" id="cl-edit-type-{{ cl.id }}" style="max-width:72px;">
+              <option value="IT" {% if cl.domain_type == 'IT' %}selected{% endif %}>IT</option>
+              <option value="OT" {% if cl.domain_type == 'OT' %}selected{% endif %}>OT</option>
+            </select>
+            <button class="btn btn-primary" style="padding:.3rem .7rem;font-size:.68rem;" onclick="saveCL('{{ sc.id }}','{{ cl.id }}')">✓</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+</div>
+
+<div class="wizard-nav">
+  <a href="{{ url_for('admin.setup_assignments', exercise_id=exercise_id) }}" class="btn btn-primary">Next: Assignments →</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const EID = '{{ exercise_id }}';
+
+function toggleScEdit(id) { const el = document.getElementById('sc-edit-'+id); el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+function toggleMEdit(id)  { const el = document.getElementById('m-edit-'+id);  el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+function toggleCLEdit(id) { const el = document.getElementById('cl-edit-'+id); el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+
+async function post(url, body) {
+  return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+}
+
+async function createScenario() {
+  const name = document.getElementById('sc-name').value.trim();
+  if (!name) return;
+  const res = await post(`/api/exercise/${EID}/setup/scenario`, {name});
+  if (!res.ok) { alert('Error'); return; }
+  const {id} = await res.json();
+  document.getElementById('sc-name').value = '';
+  document.getElementById('scenarios-list').insertAdjacentHTML('beforeend', buildScCard(id, name));
+}
+
+function buildScCard(id, name) {
+  return `<div class="sc-card" id="sc-${id}">
+    <div class="sc-header">
+      <span class="sc-name">${name}</span>
+      <button class="btn btn-ghost btn-xs" onclick="toggleScEdit('${id}')">✏ Rename</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteScenario('${id}')">✕ Delete</button>
+    </div>
+    <div id="sc-edit-${id}" class="edit-inline" style="padding:.75rem 1.25rem;display:none;">
+      <div style="display:flex;gap:.5rem;">
+        <input type="text" id="sc-rename-${id}" class="form-control" value="${name}" style="flex:1;">
+        <button class="btn btn-primary" style="padding:.4rem .9rem;font-size:.7rem;" onclick="renameScenario('${id}')">Save</button>
+      </div>
+    </div>
+    <div class="sc-body">
+      <div>
+        <div class="sub-head">Target Machines</div>
+        <div class="sub-add">
+          <input type="text" class="form-control" id="m-name-${id}" placeholder="Machine name">
+          <input type="text" class="form-control" id="m-desc-${id}" placeholder="Desc">
+          <button class="btn btn-secondary" style="padding:.4rem .6rem;font-size:.7rem;" onclick="addMachine('${id}')">+</button>
+        </div>
+        <div id="m-list-${id}"></div>
+      </div>
+      <div>
+        <div class="sub-head">Control Lines</div>
+        <div class="sub-add">
+          <input type="text" class="form-control" id="cl-name-${id}" placeholder="Control line name">
+          <select class="form-control" id="cl-type-${id}" style="max-width:72px;"><option value="IT">IT</option><option value="OT">OT</option></select>
+          <button class="btn btn-secondary" style="padding:.4rem .6rem;font-size:.7rem;" onclick="addCL('${id}')">+</button>
+        </div>
+        <div id="cl-list-${id}"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function renameScenario(sid) {
+  const name = document.getElementById('sc-rename-'+sid).value.trim();
+  if (!name) return;
+  await post(`/api/exercise/${EID}/setup/scenario/${sid}/edit`, {name});
+  location.reload();
+}
+
+async function deleteScenario(sid) {
+  if (!confirm('Delete this scenario?')) return;
+  const res = await post(`/api/exercise/${EID}/setup/scenario/${sid}/delete`, {});
+  if (res.ok) document.getElementById('sc-'+sid).remove();
+}
+
+async function addMachine(sid) {
+  const name = document.getElementById(`m-name-${sid}`).value.trim();
+  const desc = document.getElementById(`m-desc-${sid}`).value.trim();
+  if (!name) return;
+  const res = await post(`/api/exercise/${EID}/setup/scenario/${sid}/machine`, {name, description:desc});
+  if (!res.ok) return;
+  const {id} = await res.json();
+  document.getElementById(`m-name-${sid}`).value = '';
+  document.getElementById(`m-desc-${sid}`).value = '';
+  document.getElementById(`m-list-${sid}`).insertAdjacentHTML('beforeend',
+    `<div class="item-row" id="m-row-${id}">
+      <span style="color:var(--accent-cyan);font-size:.65rem;">🖥</span>
+      <span class="item-name" id="m-name-display-${id}">${name}${desc?` <span style="color:var(--text-muted);font-size:.75rem;">— ${desc}</span>`:''}
+      </span>
+      <button class="btn btn-ghost btn-xs" onclick="toggleMEdit('${id}')">✏</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteMachine('${sid}','${id}',this)">✕</button>
+    </div>
+    <div id="m-edit-${id}" class="edit-inline">
+      <div style="display:flex;gap:.4rem;">
+        <input type="text" class="form-control" id="m-edit-name-${id}" value="${name}" style="flex:2;">
+        <input type="text" class="form-control" id="m-edit-desc-${id}" value="${desc}" placeholder="Description" style="flex:2;">
+        <button class="btn btn-primary" style="padding:.3rem .7rem;font-size:.68rem;" onclick="saveMachine('${sid}','${id}')">✓</button>
+      </div>
+    </div>`);
+}
+
+async function saveMachine(sid, mid) {
+  const name = document.getElementById(`m-edit-name-${mid}`).value.trim();
+  const desc = document.getElementById(`m-edit-desc-${mid}`).value.trim();
+  const res = await post(`/api/exercise/${EID}/setup/scenario/${sid}/machine/${mid}/edit`, {name, description:desc});
+  if (res.ok) {
+    document.getElementById(`m-name-display-${mid}`).innerHTML = name + (desc ? ` <span style="color:var(--text-muted);font-size:.75rem;">— ${desc}</span>` : '');
+    document.getElementById(`m-edit-${mid}`).style.display = 'none';
+  }
+}
+
+async function deleteMachine(sid, mid, btn) {
+  if (!confirm('Delete machine?')) return;
+  const res = await post(`/api/exercise/${EID}/setup/scenario/${sid}/machine/${mid}/delete`, {});
+  if (res.ok) { document.getElementById(`m-row-${mid}`)?.remove(); document.getElementById(`m-edit-${mid}`)?.remove(); }
+}
+
+async function addCL(sid) {
+  const name = document.getElementById(`cl-name-${sid}`).value.trim();
+  const type = document.getElementById(`cl-type-${sid}`).value;
+  if (!name) return;
+  const order = document.getElementById(`cl-list-${sid}`).querySelectorAll('.item-row').length;
+  const res = await post(`/api/exercise/${EID}/setup/scenario/${sid}/control-line`, {name, domain_type:type, order});
+  if (!res.ok) return;
+  const {id} = await res.json();
+  document.getElementById(`cl-name-${sid}`).value = '';
+  const tagClass = type === 'IT' ? 'tag-it' : 'tag-ot';
+  document.getElementById(`cl-list-${sid}`).insertAdjacentHTML('beforeend',
+    `<div class="item-row" id="cl-row-${id}">
+      <span class="tag ${tagClass}" id="cl-tag-${id}">${type}</span>
+      <span class="item-name" id="cl-name-display-${id}">${name}</span>
+      <button class="btn btn-ghost btn-xs" onclick="toggleCLEdit('${id}')">✏</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteCL('${sid}','${id}',this)">✕</button>
+    </div>
+    <div id="cl-edit-${id}" class="edit-inline">
+      <div style="display:flex;gap:.4rem;align-items:center;">
+        <input type="text" class="form-control" id="cl-edit-name-${id}" value="${name}" style="flex:2;">
+        <select class="form-control" id="cl-edit-type-${id}" style="max-width:72px;"><option value="IT" ${type==='IT'?'selected':''}>IT</option><option value="OT" ${type==='OT'?'selected':''}>OT</option></select>
+        <button class="btn btn-primary" style="padding:.3rem .7rem;font-size:.68rem;" onclick="saveCL('${sid}','${id}')">✓</button>
+      </div>
+    </div>`);
+}
+
+async function saveCL(sid, clid) {
+  const name = document.getElementById(`cl-edit-name-${clid}`).value.trim();
+  const type = document.getElementById(`cl-edit-type-${clid}`).value;
+  const res = await post(`/api/exercise/${EID}/setup/scenario/${sid}/control-line/${clid}/edit`, {name, domain_type:type});
+  if (res.ok) {
+    document.getElementById(`cl-name-display-${clid}`).textContent = name;
+    const tag = document.getElementById(`cl-tag-${clid}`);
+    if (tag) { tag.textContent = type; tag.className = `tag ${type==='IT'?'tag-it':'tag-ot'}`; }
+    document.getElementById(`cl-edit-${clid}`).style.display = 'none';
+  }
+}
+
+async function deleteCL(sid, clid, btn) {
+  if (!confirm('Delete control line?')) return;
+  const res = await post(`/api/exercise/${EID}/setup/scenario/${sid}/control-line/${clid}/delete`, {});
+  if (res.ok) { document.getElementById(`cl-row-${clid}`)?.remove(); document.getElementById(`cl-edit-${clid}`)?.remove(); }
+}
+</script>
+{% endblock %}

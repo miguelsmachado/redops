@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Full Exercise Report — {{ data.exercise_name }}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #fff; color: #111; font-family: 'Share Tech Mono', monospace; font-size: 11pt; line-height: 1.6; }
+    .cover { padding: 3rem; border-bottom: 4px solid #cc0022; margin-bottom: 2rem; }
+    .cover-title { font-family: 'Rajdhani', sans-serif; font-size: 2rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #cc0022; }
+    .cover-meta { margin-top: 1rem; font-size: 9pt; color: #555; }
+    .cover-meta div { margin-bottom: 0.2rem; }
+    .bt-section { padding: 0 3rem; margin-bottom: 3rem; page-break-before: always; }
+    .bt-title { font-family: 'Rajdhani', sans-serif; font-size: 1.4rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #cc0022; border-bottom: 2px solid #cc0022; padding-bottom: 0.3rem; margin-bottom: 1.5rem; }
+    .subsection-title { font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #333; border-bottom: 1px dotted #ccc; padding-bottom: 0.2rem; margin: 1rem 0; }
+    .cl-row { display: flex; gap: 1rem; padding: 0.4rem 0; border-bottom: 1px dotted #eee; font-size: 10pt; align-items: center; }
+    .tag { font-size: 7pt; letter-spacing: 1.5px; text-transform: uppercase; padding: 1px 6px; border-radius: 2px; }
+    .tag-it { background: #e0f4ff; border: 1px solid #aadcef; color: #006688; }
+    .tag-ot { background: #fff4e0; border: 1px solid #efccaa; color: #885500; }
+    .action-row { padding: 0.6rem 0; border-bottom: 1px dotted #eee; font-size: 10pt; }
+    .action-head { display: flex; justify-content: space-between; margin-bottom: 0.2rem; }
+    .action-detail { color: #333; border-left: 2px solid #ddd; padding-left: 0.75rem; margin-top: 0.2rem; }
+    .no-print-bar { background: #111; color: #eee; padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 1rem; }
+    @media print { .no-print-bar { display: none; } }
+  </style>
+</head>
+<body>
+
+<div class="no-print-bar">
+  <span style="font-size: 11pt; letter-spacing: 2px;">FULL EXERCISE REPORT</span>
+  <button onclick="window.print()" style="margin-left: auto; background: #cc0022; color: #fff; border: none; padding: 0.4rem 1rem; cursor: pointer; font-family: monospace; font-size: 10pt; letter-spacing: 1px;">⬇ PRINT / SAVE PDF</button>
+</div>
+
+<div class="cover">
+  {% if data.logo_path %}<img src="{{ data.logo_path }}" style="height:50px;object-fit:contain;margin-bottom:.75rem;"><br>{% endif %}
+  <div style="font-size: 8pt; letter-spacing: 4px; color: #888; margin-bottom: 0.5rem;">FULL EXERCISE REPORT — CONFIDENTIAL</div>
+  <div class="cover-title">{{ data.exercise_name }}</div>
+  <div class="cover-meta">
+    <div><strong>Started:</strong> {{ data.created_at | brt }}</div>
+    <div><strong>Closed:</strong> {{ data.closed_at | brt if data.closed_at else 'N/A' }} UTC</div>
+    <div><strong>Blue Teams:</strong> {{ data.blue_teams|length }}</div>
+  </div>
+</div>
+
+{% for bt in data.blue_teams %}
+<div class="bt-section">
+  <div class="bt-title">{{ bt.blue_team_name }}</div>
+
+  <div class="subsection-title">Control Lines Achieved</div>
+  {% if bt.achievements %}
+    {% for ach in bt.achievements %}
+    <div class="cl-row">
+      <span class="tag {{ 'tag-it' if ach.domain_type == 'IT' else 'tag-ot' }}">{{ ach.domain_type }}</span>
+      <span style="flex: 1;">{{ ach.control_line_name }}</span>
+      <span style="color: #555; font-size: 9pt;">{{ ach.operator_name }}</span>
+      <span style="color: #888; font-size: 9pt;">{{ ach.achieved_at | brt }}</span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="color: #888; font-size: 10pt;">No control lines achieved.</p>
+  {% endif %}
+
+  <div class="subsection-title" style="margin-top: 1.5rem;">Attack Actions ({{ bt.actions|length }})</div>
+  {% if bt.actions %}
+    {% for a in bt.actions %}
+    <div class="action-row">
+      <div class="action-head">
+        <span style="font-weight: bold;">{{ a.summary }}</span>
+        <span style="color: #888; font-size: 9pt;">{{ a.occurred_at | brt }} BRT -3</span>
+      </div>
+      <div style="color: #555; font-size: 9pt; margin-bottom: 0.2rem;">🖥 {{ a.machine_name }} — 👤 {{ a.operator_name }}</div>
+      <div class="action-detail">{{ a.detail }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="color: #888; font-size: 10pt;">No attack actions recorded.</p>
+  {% endif %}
+</div>
+{% endfor %}
+
+</body>
+</html>

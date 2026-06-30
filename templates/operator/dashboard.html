@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% set exercise_name = data.exercise_name %}
+{% set logo_path = data.logo_path %}
+{% block title %}Operator — {{ data.operator_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .op-header{background:linear-gradient(135deg,rgba(255,45,85,.08) 0%,transparent 60%);border-bottom:1px solid var(--border-subtle);padding:1.5rem 2rem;position:relative;z-index:1;}
+  .tabs{display:flex;border-bottom:1px solid var(--border-subtle);padding:0 2rem;background:rgba(0,0,0,.3);position:relative;z-index:1;}
+  .tab-btn{font-family:var(--font-mono);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;padding:.85rem 1.5rem;color:var(--text-muted);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;}
+  .tab-btn:hover{color:var(--text-primary);}
+  .tab-btn.active{color:var(--accent-cyan);border-bottom-color:var(--accent-cyan);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+  .bt-tab{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+  .bt-tab-btn{font-family:var(--font-mono);font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;padding:.35rem .9rem;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;border-radius:2px;transition:all .2s;}
+  .bt-tab-btn.active,.bt-tab-btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan);background:var(--accent-cyan-dim);}
+
+  .cl-row{display:flex;align-items:center;gap:1rem;padding:.75rem 1rem;border-bottom:1px solid rgba(255,255,255,.03);background:var(--bg-card);transition:background .15s;}
+  .cl-row:hover{background:var(--bg-card-hover);}
+  .cl-row.achieved .cl-name{color:var(--accent-green);}
+
+  /* Custom toggle switch */
+  .sw{position:relative;width:44px;height:22px;flex-shrink:0;cursor:pointer;}
+  .sw input{opacity:0;width:0;height:0;}
+  .sw-track{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:22px;border:1px solid var(--border-subtle);transition:.3s;}
+  .sw-track:before{content:'';position:absolute;height:16px;width:16px;left:2px;bottom:2px;background:var(--text-muted);border-radius:50%;transition:.3s;}
+  .sw input:checked~.sw-track{background:rgba(0,255,136,.2);border-color:var(--accent-green);}
+  .sw input:checked~.sw-track:before{transform:translateX(22px);background:var(--accent-green);box-shadow:0 0 8px rgba(0,255,136,.5);}
+  .sw.loading .sw-track{opacity:.5;}
+
+  .cl-info{flex:1;}
+  .cl-name{font-size:.9rem;transition:color .2s;}
+  .cl-time{font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);margin-top:.1rem;}
+
+  .atk-form{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:4px;padding:1.5rem;margin-bottom:1.5rem;position:relative;}
+  .atk-form::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent-red),transparent);}
+
+  .action-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:4px;padding:1rem 1.25rem;margin-bottom:.6rem;transition:border-color .2s;}
+  .action-card:hover{border-color:rgba(0,212,255,.15);}
+  .action-btns{display:flex;gap:.4rem;margin-top:.6rem;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="op-header">
+  <div style="display:flex;align-items:center;gap:1rem;">
+    {% if data.logo_path %}
+    <img src="{{ data.logo_path }}" style="height:40px;object-fit:contain;filter:drop-shadow(0 0 8px var(--accent-cyan));">
+    {% endif %}
+    <div>
+      <div style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);">// OPERATOR CONSOLE</div>
+      <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;">{{ data.operator_name }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('attacks',this)">Attack Log</button>
+  <button class="tab-btn" onclick="switchTab('cl',this)">Control Lines</button>
+</div>
+
+<div class="container" style="padding-top:0;">
+
+  <!-- ══ ATTACKS TAB ══ -->
+  <div id="tab-attacks" class="tab-panel active">
+    <div class="atk-form">
+      <div class="section-title" style="margin-bottom:1.25rem;">Register <span>Attack</span></div>
+      <form method="POST" action="{{ url_for('operator.new_attack') }}">
+        <div class="grid-2">
+          {% if data.blue_teams|length > 1 %}
+          <div class="form-group">
+            <label class="form-label">Blue Team</label>
+            <select name="blue_team_id" id="bt-sel" class="form-control" required onchange="updateMachines()">
+              <option value="">Select Blue Team</option>
+              {% for bt in data.blue_teams %}
+              <option value="{{ bt.blue_team_id }}">{{ bt.blue_team_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% else %}
+          <input type="hidden" name="blue_team_id" value="{{ data.blue_teams[0].blue_team_id if data.blue_teams else '' }}">
+          <div class="form-group">
+            <label class="form-label">Blue Team</label>
+            <input type="text" class="form-control" value="{{ data.blue_teams[0].blue_team_name if data.blue_teams else 'N/A' }}" disabled>
+          </div>
+          {% endif %}
+
+          <div class="form-group">
+            <label class="form-label">Target Machine</label>
+            <select name="machine_id" id="machine-sel" class="form-control" required>
+              <option value="">Select Machine</option>
+              {% for bt in data.blue_teams %}{% if bt.scenario %}{% for m in bt.scenario.machines %}
+              <option value="{{ m.id }}" data-bt="{{ bt.blue_team_id }}">{{ m.name }}</option>
+              {% endfor %}{% endif %}{% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Summary (público)</label>
+            <input type="text" name="summary" class="form-control" placeholder="Ex: Phishing entregue" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Horário (BRT -3)</label>
+            <input type="datetime-local" name="occurred_at" id="occ-at" class="form-control">
+            <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);margin-top:.25rem;">Horário de Brasília (UTC-3)</div>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">Descrição Detalhada (apenas no relatório)</label>
+            <textarea name="detail" class="form-control" rows="3" placeholder="Técnica, ferramentas, IOCs..." required></textarea>
+          </div>
+        </div>
+        <input type="hidden" name="timezone_name" value="BRT">
+        <button type="submit" class="btn btn-primary">⚡ Registrar Ataque</button>
+      </form>
+    </div>
+
+    <div class="section-title">Histórico de <span>Ataques</span></div>
+    {% for a in data.actions %}
+    <div class="action-card" id="atk-{{ a.id }}">
+      <div style="display:flex;justify-content:space-between;margin-bottom:.3rem;gap:.5rem;flex-wrap:wrap;">
+        <div style="font-size:.95rem;font-weight:600;">{{ a.summary }}</div>
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap;">
+          <span class="tag tag-it" style="font-size:.62rem;">{{ a.blue_team_name }}</span>
+          <span class="tag tag-pending" style="font-size:.62rem;">{{ a.machine_name }}</span>
+        </div>
+      </div>
+      <div style="font-size:.82rem;color:var(--text-secondary);border-left:2px solid var(--border-subtle);padding-left:.75rem;margin:.4rem 0;">{{ a.detail }}</div>
+      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);">
+        🕐 {{ a.occurred_at | brt }}
+      </div>
+      <div class="action-btns">
+        <a href="{{ url_for('operator.edit_attack', action_id=a.id) }}" class="btn btn-secondary" style="padding:.25rem .7rem;font-size:.65rem;">✏ Editar</a>
+        <form method="POST" action="{{ url_for('operator.delete_attack', action_id=a.id) }}" style="display:inline;" onsubmit="return confirm('Excluir este ataque?')">
+          <button type="submit" class="btn btn-danger" style="padding:.25rem .7rem;font-size:.65rem;">✕ Excluir</button>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <div style="padding:2rem;text-align:center;font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);">Nenhum ataque registrado ainda.</div>
+    {% endfor %}
+  </div>
+
+  <!-- ══ CONTROL LINES TAB ══ -->
+  <div id="tab-cl" class="tab-panel">
+    {% if data.blue_teams|length > 1 %}
+    <div class="bt-tab">
+      {% for bt in data.blue_teams %}
+      <button class="bt-tab-btn {% if loop.first %}active{% endif %}" onclick="showBT('{{ bt.blue_team_id }}',this)">{{ bt.blue_team_name }}</button>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% for bt in data.blue_teams %}
+    <div id="cl-bt-{{ bt.blue_team_id }}" class="cl-bt-panel" {% if not loop.first %}style="display:none"{% endif %}>
+      {% if bt.scenario %}
+        {% if bt.has_it %}
+        <div class="section-title" style="margin-bottom:.75rem;">
+          IT <span>Control Lines</span>
+          <span style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);margin-left:.75rem;">
+            {{ bt.scenario.it_progress.achieved }}/{{ bt.scenario.it_progress.total }}
+          </span>
+        </div>
+        {% for cl in bt.scenario.control_lines if cl.domain_type == 'IT' %}
+        <div class="cl-row {% if cl.achieved %}achieved{% endif %}" id="cl-row-{{ cl.id }}-{{ bt.blue_team_id }}">
+          <label class="sw" id="sw-{{ cl.id }}-{{ bt.blue_team_id }}">
+            <input type="checkbox" {% if cl.achieved %}checked{% endif %}
+              onchange="toggleCL(this,'{{ cl.id }}','{{ bt.blue_team_id }}')">
+            <span class="sw-track"></span>
+          </label>
+          <span class="tag tag-it">IT</span>
+          <div class="cl-info">
+            <div class="cl-name">{{ cl.name }}</div>
+            {% if cl.description %}<div class="cl-time">{{ cl.description }}</div>{% endif %}
+            <div class="cl-time" id="cl-time-{{ cl.id }}-{{ bt.blue_team_id }}">
+              {% if cl.achieved_at %}✓ {{ cl.achieved_at | brt }}{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if bt.has_ot %}
+        <div class="section-title" style="margin-top:1.5rem;margin-bottom:.75rem;">
+          OT/SCADA <span>Control Lines</span>
+          <span style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);margin-left:.75rem;">
+            {{ bt.scenario.ot_progress.achieved }}/{{ bt.scenario.ot_progress.total }}
+          </span>
+        </div>
+        {% for cl in bt.scenario.control_lines if cl.domain_type == 'OT' %}
+        <div class="cl-row {% if cl.achieved %}achieved{% endif %}" id="cl-row-{{ cl.id }}-{{ bt.blue_team_id }}">
+          <label class="sw" id="sw-{{ cl.id }}-{{ bt.blue_team_id }}">
+            <input type="checkbox" {% if cl.achieved %}checked{% endif %}
+              onchange="toggleCL(this,'{{ cl.id }}','{{ bt.blue_team_id }}')">
+            <span class="sw-track"></span>
+          </label>
+          <span class="tag tag-ot">OT</span>
+          <div class="cl-info">
+            <div class="cl-name">{{ cl.name }}</div>
+            {% if cl.description %}<div class="cl-time">{{ cl.description }}</div>{% endif %}
+            <div class="cl-time" id="cl-time-{{ cl.id }}-{{ bt.blue_team_id }}">
+              {% if cl.achieved_at %}✓ {{ cl.achieved_at | brt }}{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+      {% else %}
+      <div style="padding:2rem;text-align:center;font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);">Nenhum cenário atribuído a este Blue Team.</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set default time to now in BRT
+(function(){
+  const now = new Date();
+  // Offset to BRT (UTC-3)
+  const brt = new Date(now.getTime() - 3*60*60*1000);
+  document.getElementById('occ-at').value = brt.toISOString().slice(0,16);
+})();
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function showBT(btId, btn) {
+  document.querySelectorAll('.cl-bt-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.bt-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('cl-bt-' + btId).style.display = 'block';
+  btn.classList.add('active');
+}
+
+function updateMachines() {
+  const btId = document.getElementById('bt-sel')?.value;
+  if (!btId) return;
+  const sel = document.getElementById('machine-sel');
+  [...sel.options].forEach(opt => {
+    if (opt.value === '') return;
+    opt.style.display = (!opt.dataset.bt || opt.dataset.bt === btId) ? '' : 'none';
+  });
+  sel.value = '';
+}
+
+// AJAX toggle — stays on page
+async function toggleCL(checkbox, clId, btId) {
+  const sw = document.getElementById(`sw-${clId}-${btId}`);
+  const row = document.getElementById(`cl-row-${clId}-${btId}`);
+  const timeEl = document.getElementById(`cl-time-${clId}-${btId}`);
+  sw.classList.add('loading');
+  checkbox.disabled = true;
+
+  const action = checkbox.checked ? 'achieve' : 'revert';
+  const fd = new FormData();
+  fd.append('control_line_id', clId);
+  fd.append('blue_team_id', btId);
+  fd.append('action', action);
+
+  try {
+    const res = await fetch('/operator/control-line/toggle', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (res.ok) {
+      if (action === 'achieve') {
+        row.classList.add('achieved');
+        const now = new Date(new Date().getTime() - 3*60*60*1000);
+        timeEl.textContent = '✓ ' + now.toLocaleDateString('pt-BR') + ' ' + now.toTimeString().slice(0,5) + ' (BRT -3)';
+      } else {
+        row.classList.remove('achieved');
+        timeEl.textContent = '';
+      }
+    } else {
+      // Revert toggle on error
+      checkbox.checked = !checkbox.checked;
+      alert(data.error || 'Erro ao atualizar.');
+    }
+  } catch(e) {
+    checkbox.checked = !checkbox.checked;
+    alert('Erro de comunicação.');
+  } finally {
+    sw.classList.remove('loading');
+    checkbox.disabled = false;
+  }
+}
+</script>
+{% endblock %}

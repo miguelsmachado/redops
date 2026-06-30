@@ -4,43 +4,43 @@
   <img src="docs/screenshots/dashboard.png" alt="REDOPS Dashboard" width="900">
 </p>
 
-> Plataforma interna para gerenciamento de exercícios Red Team. Inspirada visualmente no HackTheBox e TryHackMe, com arquitetura baseada em *Architecture Patterns with Python* (DDD, Repository Pattern, Unit of Work, Service Layer).
+> An internal platform for managing Red Team exercises. Visually inspired by HackTheBox and TryHackMe.
 
 ---
 
-## Funcionalidades
+## Features
 
-- **Wizard de configuração** guiado em 5 passos: exercício → operadores → Blue Teams → cenários → atribuições
-- **Cenários reutilizáveis** com máquinas alvo e linhas de controle IT/OT
-- **Dashboard público** em tempo real (polling 5s) com progresso IT+OT por Blue Team
-- **Área do operador** com registro de ataques e toggle de linhas de controle via AJAX
-- **Leaderboard** de operadores por número de ações
-- **Relatórios PDF** por operador com janela de tempo configurável
-- **Relatório geral** gerado automaticamente ao encerrar o exercício
-- **Timezone Brasília** (BRT -3) em todos os horários
-- **Design cyberpunk** com tema escuro, fontes Share Tech Mono / Rajdhani / Exo 2
+- **Guided 5-step setup wizard**: exercise → operators → Blue Teams → scenarios → assignments
+- **Reusable scenarios** with target machines and IT/OT control lines
+- **Real-time public dashboard** (5s polling) showing combined IT+OT progress per Blue Team
+- **Operator area** for logging attacks and toggling control lines via AJAX (no page reload)
+- **Leaderboard** ranking operators by number of actions
+- **PDF reports** per operator with a configurable time window
+- **Full exercise report**, auto-generated when the exercise is closed
+- **Brasília timezone (BRT -3)** applied to all timestamps
+- **Cyberpunk-themed UI** with a dark color scheme and monospace/display fonts
 
 ---
 
 ## Stack
 
-| Camada | Tecnologia |
+| Layer | Technology |
 |---|---|
 | Backend | Python 3.12, Flask 3.0 |
 | ORM | SQLAlchemy 2.0 (classical mapping) |
-| Banco | SQLite (padrão) / compatível com PostgreSQL |
-| Frontend | Jinja2 + CSS puro + JavaScript vanilla |
-| Testes | Pytest + FakeUnitOfWork |
+| Database | SQLite (default) / PostgreSQL-compatible |
+| Frontend | Jinja2 + plain CSS + vanilla JavaScript |
+| Testing | Pytest + FakeUnitOfWork |
 
 ---
 
-## Pré-requisitos
+## Prerequisites
 
-- **Python 3.10 ou superior** ([download](https://www.python.org/downloads/))
-- **pip** (já vem com o Python)
-- **git** (para clonar o repositório)
+- **Python 3.10 or higher** ([download](https://www.python.org/downloads/))
+- **pip** (bundled with Python)
+- **git** (to clone the repository)
 
-Verifique se já tem instalado:
+Check what you already have installed:
 
 ```bash
 python3 --version
@@ -49,22 +49,22 @@ pip3 --version
 
 ---
 
-## Instalação
+## Installation
 
-### 1. Clone o repositório
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/seu-usuario/redops.git
+git clone https://github.com/your-username/redops.git
 cd redops
 ```
 
-### 2. Crie um ambiente virtual
+### 2. Create a virtual environment
 
 ```bash
 python3 -m venv venv
 ```
 
-### 3. Ative o ambiente virtual
+### 3. Activate the virtual environment
 
 **Linux / macOS:**
 ```bash
@@ -81,22 +81,22 @@ venv\Scripts\activate.bat
 venv\Scripts\Activate.ps1
 ```
 
-Quando ativado, você verá `(venv)` no início da linha do terminal.
+Once activated, you'll see `(venv)` at the start of your terminal prompt.
 
-### 4. Instale as dependências
+### 4. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Configure as variáveis de ambiente (opcional)
+### 5. Configure environment variables (optional)
 
-O projeto roda com valores padrão, mas você pode customizar:
+The project runs with sensible defaults, but you can customize them:
 
 **Linux / macOS:**
 ```bash
 export DATABASE_URL=sqlite:///redteam.db
-export SECRET_KEY=troque-esta-chave-em-producao
+export SECRET_KEY=change-this-in-production
 export ADMIN_USERNAME=admin
 export ADMIN_PASSWORD=admin123
 ```
@@ -104,7 +104,7 @@ export ADMIN_PASSWORD=admin123
 **Windows (cmd):**
 ```cmd
 set DATABASE_URL=sqlite:///redteam.db
-set SECRET_KEY=troque-esta-chave-em-producao
+set SECRET_KEY=change-this-in-production
 set ADMIN_USERNAME=admin
 set ADMIN_PASSWORD=admin123
 ```
@@ -112,25 +112,25 @@ set ADMIN_PASSWORD=admin123
 **Windows (PowerShell):**
 ```powershell
 $env:DATABASE_URL="sqlite:///redteam.db"
-$env:SECRET_KEY="troque-esta-chave-em-producao"
+$env:SECRET_KEY="change-this-in-production"
 $env:ADMIN_USERNAME="admin"
 $env:ADMIN_PASSWORD="admin123"
 ```
 
-> Se pular esta etapa, o sistema usa os valores padrão automaticamente (`admin` / `admin123`).
+> If you skip this step, the system falls back to default values automatically (`admin` / `admin123`).
 
-### 6. Execute o servidor
+### 6. Run the server
 
 ```bash
 python wsgi.py
 ```
 
-Você verá algo como:
+You should see something like:
 ```
  * Running on http://0.0.0.0:5000
 ```
 
-### 7. Acesse no navegador
+### 7. Open it in your browser
 
 ```
 http://localhost:5000
@@ -138,34 +138,35 @@ http://localhost:5000
 
 ---
 
-## Variáveis de ambiente disponíveis
+## Environment variables
 
-| Variável | Padrão | Descrição |
+| Variable | Default | Description |
 |---|---|---|
-| `DATABASE_URL` | `sqlite:///redteam.db` | URL de conexão do banco |
-| `SECRET_KEY` | `dev-secret-change-in-prod` | Chave secreta do Flask (sessões) |
-| `ADMIN_USERNAME` | `admin` | Usuário do administrador |
-| `ADMIN_PASSWORD` | `admin123` | **Altere antes de usar em produção!** |
+| `DATABASE_URL` | `sqlite:///redteam.db` | Database connection URL |
+| `SECRET_KEY` | `dev-secret-change-in-prod` | Flask secret key (sessions) |
+| `ADMIN_USERNAME` | `admin` | Administrator username |
+| `ADMIN_PASSWORD` | `admin123` | **Change this before real use!** |
+| `PORT` | `5000` | Port the dev server listens on |
 
 ---
 
-## Parar o servidor
+## Stopping the server
 
-No terminal onde está rodando, pressione:
+In the terminal where it's running, press:
 ```
 Ctrl + C
 ```
 
-Para sair do ambiente virtual:
+To exit the virtual environment:
 ```bash
 deactivate
 ```
 
 ---
 
-## Rodar novamente depois (próximas vezes)
+## Running it again later
 
-Você não precisa repetir toda a instalação — só ativar o ambiente virtual e rodar:
+You don't need to repeat the full install — just activate the venv and run:
 
 ```bash
 cd redops
@@ -177,45 +178,45 @@ python wsgi.py
 
 ---
 
-## Arquitetura
+## Architecture
 
-Seguindo *Architecture Patterns with Python* (Percival & Gregory):
+Built following patterns from *Architecture Patterns with Python* (Percival & Gregory):
 
 ```
 src/
 ├── domain/
-│   ├── model.py          # Entidades, Value Objects, Eventos de domínio
-│   └── ports.py          # Interfaces abstratas dos repositórios
+│   ├── model.py          # Entities, Value Objects, domain events
+│   └── ports.py          # Abstract repository interfaces
 ├── adapters/
 │   ├── orm/
-│   │   └── mappings.py   # Mapeamento ORM clássico (ORM depende do modelo)
+│   │   └── mappings.py   # Classical SQLAlchemy mapping (ORM depends on the model)
 │   └── repository/
 │       └── sqlalchemy_repos.py
 ├── service_layer/
-│   ├── services.py       # Todos os use cases (trabalha só com primitivos)
-│   └── unit_of_work.py   # UoW abstrato + SQLAlchemy + Fake (testes)
+│   ├── services.py       # All use cases (works only with primitives)
+│   └── unit_of_work.py   # Abstract UoW + SQLAlchemy + Fake (for tests)
 └── entrypoints/
     └── flask_app.py      # Flask blueprints (HTTP → service calls)
 ```
 
-### Princípios aplicados
+### Principles applied
 
-- **Inversão de dependência**: o ORM depende do modelo de domínio, nunca o contrário
-- **Aggregate root**: `Exercise` é o agregado raiz — todas as mutações passam por ele
-- **Repository Pattern**: a service layer nunca acessa SQLAlchemy diretamente
-- **Unit of Work**: coordena repositórios e garante atomicidade
-- **Fake UoW**: testes unitários sem banco de dados
-- **Domain Events**: `AttackRegistered`, `ControlLineAchieved`, `ExerciseClosed`, etc.
+- **Dependency inversion**: the ORM depends on the domain model, never the other way around
+- **Aggregate root**: `Exercise` is the root aggregate — every mutation goes through it
+- **Repository pattern**: the service layer never touches SQLAlchemy directly
+- **Unit of Work**: coordinates repositories and guarantees atomicity
+- **Fake UoW**: unit tests run without a database
+- **Domain events**: `AttackRegistered`, `ControlLineAchieved`, `ExerciseClosed`, etc.
 
 ---
 
-## Guia de uso
+## Usage guide
 
-### 1. Primeiro acesso — Admin
+### 1. First login — Admin
 
-Acesse `http://localhost:5000/admin` e faça login com as credenciais configuradas (padrão: `admin` / `admin123`).
+Go to `http://localhost:5000/admin` and log in with your configured credentials (default: `admin` / `admin123`).
 
-No primeiro acesso sem exercício ativo, o sistema redireciona automaticamente para o wizard de configuração.
+On first login, if there's no active exercise yet, you're automatically redirected to the setup wizard.
 
 <p align="center">
   <img src="docs/screenshots/admin_login.png" alt="Admin Login" width="400">
@@ -223,85 +224,85 @@ No primeiro acesso sem exercício ativo, o sistema redireciona automaticamente p
 
 ---
 
-### 2. Wizard de configuração (5 passos)
+### 2. Setup wizard (5 steps)
 
-#### Passo 1 — Exercício
-Informe o nome e faça upload do logo (exibido no dashboard).
+#### Step 1 — Exercise
+Set the exercise name and upload a logo (shown on the dashboard).
 
 <p align="center">
   <img src="docs/screenshots/wizard_step1.png" alt="Wizard Step 1" width="700">
 </p>
 
-#### Passo 2 — Operadores
-Crie as contas dos operadores Red Team (username + senha).
+#### Step 2 — Operators
+Create Red Team operator accounts (username + password).
 
-#### Passo 3 — Blue Teams
-Crie os times defensores. Marque quais domínios participam (IT e/ou OT/SCADA).
+#### Step 3 — Blue Teams
+Create defending teams. Mark which domains apply (IT and/or OT/SCADA).
 
-#### Passo 4 — Cenários
-Crie cenários com:
-- **Máquinas alvo** (ex: DC01, SCADA-HMI-01)
-- **Linhas de controle IT** (ex: Phishing entregue, Acesso inicial obtido)
-- **Linhas de controle OT** (ex: Acesso à rede OT, Abertura de válvulas)
+#### Step 4 — Scenarios
+Build scenarios with:
+- **Target machines** (e.g. DC01, SCADA-HMI-01)
+- **IT control lines** (e.g. Phishing email delivered, Initial access obtained)
+- **OT control lines** (e.g. OT network access, Valve actuation)
 
-O mesmo cenário pode ser atribuído a múltiplos Blue Teams — o progresso é independente por time.
+The same scenario can be assigned to multiple Blue Teams — progress is tracked independently per team.
 
 <p align="center">
   <img src="docs/screenshots/wizard_step4.png" alt="Wizard Step 4 - Scenarios" width="700">
 </p>
 
-#### Passo 5 — Atribuições
-- Marque quais operadores atuam em cada Blue Team (matriz)
-- Selecione qual cenário cada Blue Team utiliza
+#### Step 5 — Assignments
+- Check which operators are assigned to each Blue Team (matrix view)
+- Select which scenario each Blue Team uses
 
 ---
 
-### 3. Área do Operador
+### 3. Operator area
 
-Acesse `http://localhost:5000/operator` com as credenciais criadas pelo admin.
+Go to `http://localhost:5000/operator` and log in with the credentials created by the admin.
 
 <p align="center">
   <img src="docs/screenshots/operator_dashboard.png" alt="Operator Dashboard" width="900">
 </p>
 
-#### Registrar ataque
-Preencha:
-- Blue Team alvo (se tiver mais de um atribuído)
-- Máquina alvo (do cenário do BT)
-- Sumário público (aparece no feed do dashboard)
-- Descrição detalhada (aparece apenas no relatório)
-- Horário (BRT -3, preenchido automaticamente)
+#### Logging an attack
+Fill in:
+- Target Blue Team (if assigned to more than one)
+- Target machine (from that BT's scenario)
+- Public summary (shown in the dashboard feed)
+- Detailed description (shown only in reports)
+- Timestamp (BRT -3, auto-filled)
 
-#### Marcar linhas de controle
-Na aba **Control Lines**, use o toggle para marcar/desmarcar cada linha atingida.
-A marcação é feita via AJAX — **a página não recarrega**.
+#### Marking control lines
+On the **Control Lines** tab, use the toggle to mark/unmark each line as achieved.
+This happens via AJAX — **the page never reloads**.
 
 ---
 
-### 4. Dashboard público
+### 4. Public dashboard
 
-Acesse `http://localhost:5000` — sem login necessário.
+Go to `http://localhost:5000` — no login required.
 
 <p align="center">
   <img src="docs/screenshots/dashboard_full.png" alt="Dashboard" width="900">
 </p>
 
-Exibe:
-- **Logo** do exercício em destaque
-- **Barras de progresso** por Blue Team: segmento azul (IT) + vermelho (OT) em uma linha contínua, ordenadas por avanço
-- **Detalhes** das linhas de controle por BT
-- **Live Attack Feed** — últimos 20 ataques, atualizado a cada 5 segundos
-- **Leaderboard** de operadores por número de ações
+Shows:
+- The exercise **logo**, prominently displayed
+- **Progress bars** per Blue Team: a single continuous bar split into a blue (IT) and red (OT) segment, sorted by overall progress
+- **Control line details** per Blue Team
+- **Live attack feed** — last 20 attacks, refreshing every 5 seconds
+- **Leaderboard** ranking operators by number of actions
 
 ---
 
-### 5. Relatório do operador
+### 5. Operator report
 
-Acesse `http://localhost:5000/operator/report`.
+Go to `http://localhost:5000/operator/report`.
 
-Selecione o Blue Team e a janela de tempo → clique em **Generate PDF Report**.
+Pick the Blue Team and time window → click **Generate PDF Report**.
 
-Na página gerada, use `Ctrl+P` → "Salvar como PDF".
+On the generated page, use `Ctrl+P` → "Save as PDF".
 
 <p align="center">
   <img src="docs/screenshots/report.png" alt="Report" width="700">
@@ -309,52 +310,52 @@ Na página gerada, use `Ctrl+P` → "Salvar como PDF".
 
 ---
 
-### 6. Encerrar o exercício
+### 6. Closing the exercise
 
-No painel admin → **Close Exercise**.
+From the admin panel → **Close Exercise**.
 
-O dashboard congela no estado final e o relatório completo fica disponível em `/admin/report/<exercise_id>`.
+The dashboard freezes in its final state, and the full report becomes available at `/admin/report/<exercise_id>`.
 
 ---
 
-## Testes
+## Tests
 
 ```bash
-# Com o ambiente virtual ativado
+# With the virtual environment active
 pip install pytest
 python -m pytest tests/unit/ -v
 ```
 
-Resultado esperado: **28 passed**
+Expected result: **28 passed**
 
-Os testes unitários usam `FakeUnitOfWork` — nenhum banco de dados é necessário para rodá-los.
+Unit tests use `FakeUnitOfWork` — no database is needed to run them.
 
 ---
 
-## Rodando com Docker (alternativa)
+## Running with Docker (alternative)
 
-Se preferir, o projeto também inclui suporte a Docker:
+Docker support is also included if you prefer it:
 
 ```bash
 docker-compose up --build
-# Acesse http://localhost:7331
+# Visit http://localhost:7331
 ```
 
-Mas o método recomendado para desenvolvimento e uso simples é o ambiente virtual Python descrito acima.
+The recommended path for development and everyday use, however, is the Python virtual environment described above.
 
 ---
 
-## Estrutura de arquivos
+## Project structure
 
 ```
 redops/
 ├── src/
 │   ├── domain/
-│   │   ├── model.py              # Domínio puro
+│   │   ├── model.py              # Pure domain logic
 │   │   └── ports.py              # Interfaces
 │   ├── adapters/
-│   │   ├── orm/mappings.py       # ORM clássico SQLAlchemy
-│   │   └── repository/           # Implementações concretas
+│   │   ├── orm/mappings.py       # Classical SQLAlchemy ORM mapping
+│   │   └── repository/           # Concrete implementations
 │   ├── service_layer/
 │   │   ├── services.py           # Use cases
 │   │   └── unit_of_work.py       # UoW + Fake
@@ -369,60 +370,69 @@ redops/
 │   └── reports/
 ├── static/
 │   ├── css/
-│   └── img/                      # Logos (não versionado)
+│   └── img/                      # Uploaded logos (not versioned)
 ├── tests/
 │   └── unit/
 │       ├── test_domain_model.py
 │       └── test_services.py
 ├── requirements.txt
 ├── wsgi.py
-├── Dockerfile                    # Opcional
-├── docker-compose.yml            # Opcional
+├── Dockerfile                    # Optional
+├── docker-compose.yml            # Optional
 └── README.md
 ```
 
 ---
 
-## Referência arquitetural
+## Architectural reference
 
-Este projeto implementa os padrões descritos em:
+This project implements the patterns described in:
 
 > **Architecture Patterns with Python**
 > Harry Percival & Bob Gregory — O'Reilly, 2020
 > [https://www.cosmicpython.com](https://www.cosmicpython.com)
 
-Capítulos aplicados:
-- Cap. 1: Domain Modeling
-- Cap. 2: Repository Pattern
-- Cap. 4: Service Layer
-- Cap. 5: TDD (High Gear and Low Gear)
-- Cap. 6: Unit of Work
-- Cap. 7: Aggregates
+Chapters applied:
+- Ch. 1: Domain Modeling
+- Ch. 2: Repository Pattern
+- Ch. 4: Service Layer
+- Ch. 5: TDD (High Gear and Low Gear)
+- Ch. 6: Unit of Work
+- Ch. 7: Aggregates
 
 ---
 
 ## Troubleshooting
 
-**`python3` não é reconhecido (Windows)**
-Use `python` no lugar de `python3`.
+**`python3` is not recognized (Windows)**
+Use `python` instead of `python3`.
 
-**Erro de permissão ao ativar o venv (PowerShell)**
+**Permission error activating venv (PowerShell)**
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-**Porta 5000 já em uso**
+**Port 5000 already in use**
 ```bash
-export PORT=8080  # ou outra porta livre
+export PORT=8080  # or any free port
 python wsgi.py
 ```
-*(nota: seria necessário ajustar o `wsgi.py` para ler a variável `PORT`)*
 
 ---
 
-## Licença
+## Contributing
 
-MIT — veja [LICENSE](LICENSE) para detalhes.
+1. Fork the repository
+2. Create a branch: `git checkout -b feature/my-feature`
+3. Commit: `git commit -m 'feat: description of the feature'`
+4. Push: `git push origin feature/my-feature`
+5. Open a Pull Request
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE) for details.
 
 ---
 

@@ -419,7 +419,3 @@ python wsgi.py
 ```
 
 ---
-
-<p align="center">
-  Built with ⚡ for Red Team operations
-</p>

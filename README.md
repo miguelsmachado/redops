@@ -54,7 +54,7 @@ pip3 --version
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/redops.git
+git clone https://github.com/miguelsmachado/redops.git
 cd redops
 ```
 
@@ -417,22 +417,6 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 export PORT=8080  # or any free port
 python wsgi.py
 ```
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a branch: `git checkout -b feature/my-feature`
-3. Commit: `git commit -m 'feat: description of the feature'`
-4. Push: `git push origin feature/my-feature`
-5. Open a Pull Request
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE) for details.
 
 ---
 

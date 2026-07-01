@@ -71,7 +71,7 @@
   </div>
   <div class="flex-gap">
     {% if not exercise %}
-    <a href="{{ url_for('admin.new_exercise') }}" class="btn btn-primary">+ New Exercise</a>
+    <a href="{{ url_for('admin.setup_exercise') }}" class="btn btn-primary">+ New Exercise</a>
     {% endif %}
     <a href="{{ url_for('admin.setup_operators', exercise_id=exercise.id) if exercise else url_for('admin.setup_exercise') }}" class="btn btn-secondary">+ New Operator</a>
     <a href="{{ url_for('admin.logout') }}" class="btn btn-ghost">Logout</a>
@@ -84,7 +84,7 @@
   <div class="card" style="text-align: center; padding: 3rem;">
     <div style="font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 4px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 1rem;">No Active Exercise</div>
     <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">Create a new exercise to begin configuration.</div>
-    <a href="{{ url_for('admin.new_exercise') }}" class="btn btn-primary">Initialize Exercise</a>
+    <a href="{{ url_for('admin.setup_exercise') }}" class="btn btn-primary">Initialize Exercise</a>
   </div>
   {% else %}
 

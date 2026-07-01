@@ -20,15 +20,18 @@ class SqlAlchemyExerciseRepository(AbstractExerciseRepository):
         ex = self.session.query(Exercise).filter_by(id=exercise_id).first()
         if ex:
             self._load_assignments(ex)
+            self._refresh_collections(ex)
         return ex
 
     def get_active(self) -> Optional[Exercise]:
         ex = self.session.query(Exercise).filter_by(status=ExerciseStatus.ACTIVE).first()
         if ex:
             self._load_assignments(ex)
+            self._refresh_collections(ex)
         return ex
 
     def _load_assignments(self, exercise: Exercise):
+        """Load OperatorBTAssignment value objects from the join table."""
         rows = self.session.execute(
             select(
                 operator_bt_assignments_table.c.operator_id,
@@ -39,6 +42,26 @@ class SqlAlchemyExerciseRepository(AbstractExerciseRepository):
             OperatorBTAssignment(operator_id=r.operator_id, blue_team_id=r.blue_team_id)
             for r in rows
         ]
+
+    def _refresh_collections(self, exercise: Exercise):
+        """
+        Force SQLAlchemy to reload scenario.control_lines and scenario.machines
+        from the database on every request.
+
+        Why this is needed:
+        - The session factory uses expire_on_commit=False to avoid
+          DetachedInstanceError when objects are passed to templates.
+        - This means SQLAlchemy never automatically invalidates cached
+          collections between sessions.
+        - When the admin adds new control lines to an active exercise
+          (from a different session), those lines are invisible to the
+          operator's next request because the Scenario object still holds
+          the stale collection from when it was first loaded.
+        - session.expire(obj, attrs) marks those specific attributes as
+          stale, forcing SQLAlchemy to re-query on next access.
+        """
+        for scenario in exercise.scenarios:
+            self.session.expire(scenario, ["control_lines", "machines"])
 
 
 class SqlAlchemyOperatorRepository(AbstractOperatorRepository):
